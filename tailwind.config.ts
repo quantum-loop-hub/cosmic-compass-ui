@@ -57,33 +57,92 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom cosmic colors
+        cosmic: {
+          purple: "hsl(var(--cosmic-purple))",
+          blue: "hsl(var(--cosmic-blue))",
+          cyan: "hsl(var(--cosmic-cyan))",
+          gold: "hsl(var(--cosmic-gold))",
+          "gold-light": "hsl(var(--cosmic-gold-light))",
+          "gold-dark": "hsl(var(--cosmic-gold-dark))",
+          navy: "hsl(var(--cosmic-navy))",
+          "navy-light": "hsl(var(--cosmic-navy-light))",
+        },
+        star: {
+          white: "hsl(var(--star-white))",
+          yellow: "hsl(var(--star-yellow))",
+          blue: "hsl(var(--star-blue))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Cinzel", "serif"],
+        body: ["Raleway", "sans-serif"],
+      },
+      backgroundImage: {
+        "gradient-gold": "linear-gradient(135deg, hsl(var(--cosmic-gold)), hsl(var(--cosmic-gold-light)))",
+        "gradient-cosmic": "linear-gradient(135deg, hsl(var(--cosmic-purple)), hsl(var(--cosmic-cyan)))",
+        "gradient-night": "linear-gradient(180deg, hsl(var(--cosmic-navy)), hsl(230 40% 3%))",
+        "gradient-radial": "radial-gradient(ellipse at center, var(--tw-gradient-stops))",
+      },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        twinkle: {
+          "0%, 100%": { opacity: "0.3", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.2)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--cosmic-gold) / 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--cosmic-gold) / 0.6)" },
+        },
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.9)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        twinkle: "twinkle 3s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "fade-up": "fade-up 0.6s ease-out forwards",
+        "scale-in": "scale-in 0.3s ease-out forwards",
+        "spin-slow": "spin-slow 20s linear infinite",
+        shimmer: "shimmer 2s linear infinite",
+      },
+      boxShadow: {
+        cosmic: "0 0 30px hsl(var(--cosmic-gold) / 0.2)",
+        "cosmic-lg": "0 0 60px hsl(var(--cosmic-gold) / 0.3)",
+        glow: "0 0 20px currentColor",
       },
     },
   },
