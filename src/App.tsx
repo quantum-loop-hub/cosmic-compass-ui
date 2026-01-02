@@ -3,24 +3,47 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
+import About from "./pages/About";
+import Auth from "./pages/Auth";
+import FreeKundli from "./pages/FreeKundli";
+import KundliMatching from "./pages/KundliMatching";
+import Calculators from "./pages/Calculators";
+import Consultation from "./pages/Consultation";
+import GemstoneStore from "./pages/GemstoneStore";
+import PalmReading from "./pages/PalmReading";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/free-kundli" element={<FreeKundli />} />
+              <Route path="/kundli-matching" element={<KundliMatching />} />
+              <Route path="/calculators" element={<Calculators />} />
+              <Route path="/consultation" element={<Consultation />} />
+              <Route path="/gemstone-store" element={<GemstoneStore />} />
+              <Route path="/palm-reading" element={<PalmReading />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LanguageProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
