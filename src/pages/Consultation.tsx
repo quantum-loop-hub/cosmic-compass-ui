@@ -1,203 +1,189 @@
-import { useState } from 'react';
 import Layout from '@/components/layout/Layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Video, Clock, Languages, Calendar } from 'lucide-react';
+import { Star, Video, Clock, Languages, Calendar, Mail, Play } from 'lucide-react';
+import { useState } from 'react';
 
-const mockAstrologers = [
-  {
-    id: '1',
-    name: 'Pandit Ramesh Sharma',
-    specialties: ['Vedic Astrology', 'Career', 'Marriage'],
-    experience: 25,
-    rating: 4.9,
-    consultations: 5000,
-    pricePerMinute: 20,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-    languages: ['Hindi', 'English'],
-    isAvailable: true,
-    bio: 'Expert in Vedic astrology with 25+ years of experience. Specializes in career guidance and marriage compatibility.',
-  },
-  {
-    id: '2',
-    name: 'Acharya Deepak Joshi',
-    specialties: ['Numerology', 'Vastu', 'Gemstones'],
-    experience: 20,
-    rating: 4.8,
-    consultations: 3500,
-    pricePerMinute: 25,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
-    languages: ['Hindi', 'English', 'Marathi'],
-    isAvailable: true,
-    bio: 'Renowned numerologist and Vastu expert. Has helped thousands find success through cosmic guidance.',
-  },
-  {
-    id: '3',
-    name: 'Jyotishacharya Meera Devi',
-    specialties: ['Kundli Matching', 'Love & Relationships', 'Health'],
-    experience: 18,
-    rating: 4.9,
-    consultations: 4200,
-    pricePerMinute: 22,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    languages: ['Hindi', 'English', 'Gujarati'],
-    isAvailable: false,
-    bio: 'Specialized in relationship astrology and kundli matching. Compassionate advisor for life decisions.',
-  },
-  {
-    id: '4',
-    name: 'Dr. Suresh Pandey',
-    specialties: ['Medical Astrology', 'Remedies', 'Puja'],
-    experience: 30,
-    rating: 4.7,
-    consultations: 8000,
-    pricePerMinute: 30,
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop',
-    languages: ['Hindi', 'Sanskrit', 'English'],
-    isAvailable: true,
-    bio: 'PhD in Jyotish Shastra. Expert in medical astrology and traditional remedies for health issues.',
-  },
-];
+const astrologer = {
+  name: 'Astro Vichar',
+  email: 'astrovichar8@gmail.com',
+  specialties: ['Vedic Astrology', 'Kundli Analysis', 'Career Guidance', 'Marriage Compatibility', 'Gemstone Consultation'],
+  experience: 15,
+  rating: 4.9,
+  consultations: 5000,
+  languages: ['Hindi', 'English'],
+  bio: 'Welcome to Astro Vichar! With over 15 years of experience in Vedic Astrology, I provide personalized guidance for life\'s important decisions. From career and relationships to health and prosperity, get accurate predictions and effective remedies tailored just for you.',
+  calLink: 'https://cal.com/astrovichar', // Update with actual Cal.com link
+};
 
 const Consultation = () => {
-  const [selectedAstrologer, setSelectedAstrologer] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
-  const handleBooking = (astrologerId: string) => {
-    setSelectedAstrologer(astrologerId);
-    // In real implementation, this would open a booking modal with calendar
-    alert('Booking functionality will be implemented with Razorpay integration. Connect Supabase first!');
+  const handleBooking = () => {
+    // Open Cal.com booking widget
+    window.open(astrologer.calLink, '_blank');
   };
 
   return (
     <Layout>
-      <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <div className="flex justify-center mb-4">
-              <Video className="w-16 h-16 text-cosmic-gold" />
+              <Video className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">
-              <span className="text-gradient-gold">Live Consultation</span>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-4">
+              <span className="text-gradient-gold">Book a Consultation</span>
             </h1>
-            <p className="text-cosmic-silver max-w-2xl mx-auto">
-              Connect with our expert astrologers via video call. Get personalized guidance 
-              for your life's important decisions from the comfort of your home.
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
+              Get personalized astrological guidance via video call. Connect from the comfort of your home.
             </p>
           </div>
 
-          {/* Astrologer Cards */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {mockAstrologers.map((astrologer) => (
-              <Card 
-                key={astrologer.id} 
-                className="bg-cosmic-dark/50 border-cosmic-gold/30 hover:border-cosmic-gold/50 transition-all"
-              >
-                <CardContent className="pt-6">
-                  <div className="flex gap-4">
-                    {/* Avatar */}
-                    <div className="relative flex-shrink-0">
-                      <img 
-                        src={astrologer.avatar} 
-                        alt={astrologer.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-cosmic-gold"
-                      />
-                      <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-cosmic-dark ${
-                        astrologer.isAvailable ? 'bg-green-500' : 'bg-gray-500'
-                      }`} />
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold text-cosmic-gold">{astrologer.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-cosmic-silver">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span>{astrologer.rating}</span>
-                            <span>•</span>
-                            <span>{astrologer.consultations}+ consultations</span>
-                          </div>
-                        </div>
-                        <Badge variant={astrologer.isAvailable ? 'default' : 'secondary'} className={
-                          astrologer.isAvailable 
-                            ? 'bg-green-500/20 text-green-400 border-green-500/50' 
-                            : 'bg-gray-500/20 text-gray-400'
-                        }>
-                          {astrologer.isAvailable ? 'Available' : 'Busy'}
-                        </Badge>
-                      </div>
-
-                      {/* Specialties */}
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {astrologer.specialties.map((s) => (
-                          <Badge key={s} variant="outline" className="border-cosmic-gold/30 text-cosmic-cyan text-xs">
-                            {s}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-cosmic-silver">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {astrologer.experience} years
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Languages className="w-4 h-4" />
-                          {astrologer.languages.join(', ')}
-                        </span>
-                      </div>
-
-                      {/* Bio */}
-                      <p className="text-cosmic-silver text-sm mt-2 line-clamp-2">
-                        {astrologer.bio}
-                      </p>
-
-                      {/* Price & Book */}
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-cosmic-gold/20">
-                        <div>
-                          <span className="text-cosmic-gold font-bold text-xl">₹{astrologer.pricePerMinute}</span>
-                          <span className="text-cosmic-silver text-sm">/min</span>
-                        </div>
-                        <Button
-                          onClick={() => handleBooking(astrologer.id)}
-                          disabled={!astrologer.isAvailable}
-                          className="bg-gradient-gold hover:opacity-90 text-cosmic-dark font-semibold"
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Book Now
-                        </Button>
+          {/* Astrologer Profile Card */}
+          <Card className="bg-card/50 border-primary/30 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex flex-col lg:flex-row">
+                {/* Left Side - Photo & Video */}
+                <div className="lg:w-2/5 p-6 sm:p-8 flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                  {/* Circular Profile Image */}
+                  <div className="relative mb-6">
+                    <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-full border-4 border-primary overflow-hidden glow-gold">
+                      {/* Placeholder - will be replaced with actual image */}
+                      <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
+                        <Star className="w-16 h-16 text-primary animate-twinkle" />
                       </div>
                     </div>
+                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-card" title="Available" />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+
+                  {/* Intro Video Section */}
+                  <div className="w-full max-w-sm">
+                    <Button
+                      onClick={() => setShowVideo(!showVideo)}
+                      variant="outline"
+                      className="w-full border-primary/50 text-primary hover:bg-primary/10 gap-2"
+                    >
+                      <Play className="w-4 h-4" />
+                      {showVideo ? 'Hide Intro Video' : 'Watch Intro Video'}
+                    </Button>
+                    
+                    {showVideo && (
+                      <div className="mt-4 rounded-lg overflow-hidden border border-primary/30 aspect-video bg-muted flex items-center justify-center">
+                        {/* Placeholder for video - will be replaced with actual video */}
+                        <div className="text-center p-4">
+                          <Video className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground text-sm">Video will appear here</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side - Details */}
+                <div className="lg:w-3/5 p-6 sm:p-8">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-primary">{astrologer.name}</h2>
+                      <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+                        <Mail className="w-4 h-4" />
+                        <a href={`mailto:${astrologer.email}`} className="hover:text-primary transition-colors text-sm sm:text-base">
+                          {astrologer.email}
+                        </a>
+                      </div>
+                    </div>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50 self-start">
+                      Available
+                    </Badge>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 text-sm mb-4">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`w-4 h-4 ${i < Math.floor(astrologer.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-primary font-semibold">{astrologer.rating}</span>
+                    <span className="text-muted-foreground">• {astrologer.consultations.toLocaleString()}+ consultations</span>
+                  </div>
+
+                  {/* Specialties */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {astrologer.specialties.map((s) => (
+                      <Badge key={s} variant="outline" className="border-primary/30 text-accent text-xs sm:text-sm">
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex flex-wrap gap-4 sm:gap-6 mb-4 text-sm">
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="w-4 h-4 text-primary" />
+                      {astrologer.experience}+ years experience
+                    </span>
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Languages className="w-4 h-4 text-primary" />
+                      {astrologer.languages.join(', ')}
+                    </span>
+                  </div>
+
+                  {/* Bio */}
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6 leading-relaxed">
+                    {astrologer.bio}
+                  </p>
+
+                  {/* Book Button */}
+                  <Button
+                    onClick={handleBooking}
+                    size="lg"
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 text-primary-foreground font-semibold glow-gold"
+                  >
+                    <Calendar className="w-5 h-5 mr-2" />
+                    Schedule Consultation
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* How it works */}
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-center mb-8">
+          <div className="mt-12 sm:mt-16">
+            <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">
               <span className="text-gradient-gold">How It Works</span>
             </h2>
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {[
-                { step: 1, title: 'Choose Astrologer', desc: 'Browse our experts and select one that matches your needs' },
-                { step: 2, title: 'Book a Slot', desc: 'Pick a convenient time from the available calendar slots' },
-                { step: 3, title: 'Make Payment', desc: 'Secure payment via Razorpay with UPI, cards, or wallets' },
-                { step: 4, title: 'Join Video Call', desc: 'Get your meeting link and connect at the scheduled time' },
+                { step: 1, title: 'Choose a Time', desc: 'Select a convenient slot from the calendar' },
+                { step: 2, title: 'Fill Details', desc: 'Provide your birth details for accurate reading' },
+                { step: 3, title: 'Confirm Booking', desc: 'Complete the booking process' },
+                { step: 4, title: 'Join Video Call', desc: 'Get Google Meet link and connect at scheduled time' },
               ].map((item) => (
-                <div key={item.step} className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-gold text-cosmic-dark font-bold text-xl flex items-center justify-center mx-auto mb-4">
+                <div key={item.step} className="text-center p-4 cosmic-card-hover rounded-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-lg sm:text-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     {item.step}
                   </div>
-                  <h3 className="text-cosmic-gold font-semibold mb-2">{item.title}</h3>
-                  <p className="text-cosmic-silver text-sm">{item.desc}</p>
+                  <h3 className="text-primary font-semibold mb-2 text-sm sm:text-base">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm">{item.desc}</p>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Contact Section */}
+          <div className="mt-12 text-center">
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Have questions? Reach out at{' '}
+              <a href={`mailto:${astrologer.email}`} className="text-primary hover:underline">
+                {astrologer.email}
+              </a>
+            </p>
           </div>
         </div>
       </div>
