@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = "https://enlxxeyzthcphnettkeu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVubHh4ZXl6dGhjcGhuZXR0a2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDY1NDQsImV4cCI6MjA4MjkyMjU0NH0.ilgqW9DOwg0yOlLcMk9JQFwZlGovAHVNF0ZX1QBm70E";
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('Supabase credentials not found. Please connect your Supabase project.');
-}
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
