@@ -14,6 +14,7 @@ import Calculators from "./pages/Calculators";
 import Consultation from "./pages/Consultation";
 import GemstoneStore from "./pages/GemstoneStore";
 import PalmReading from "./pages/PalmReading";
+import Horoscope from "./pages/Horoscope";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/consultation" element={<Consultation />} />
               <Route path="/gemstone-store" element={<GemstoneStore />} />
               <Route path="/palm-reading" element={<PalmReading />} />
+              <Route path="/horoscope/:sign" element={<Horoscope />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

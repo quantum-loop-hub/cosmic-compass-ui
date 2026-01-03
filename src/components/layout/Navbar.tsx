@@ -16,11 +16,9 @@ const Navbar = () => {
     { path: '/', label: t('nav.home') },
     { path: '/about', label: t('nav.about') },
     { path: '/free-kundli', label: t('nav.freeKundli') },
-    { path: '/kundli-matching', label: t('nav.kundliMatching') },
     { path: '/calculators', label: t('nav.calculators') },
     { path: '/consultation', label: t('nav.consultation') },
     { path: '/gemstone-store', label: t('nav.gemstoneStore') },
-    { path: '/palm-reading', label: t('nav.palmReading') },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -16,7 +16,7 @@ const mockProducts = [
     caratWeight: 3.5,
     origin: 'Sri Lanka',
     benefits: ['Wealth', 'Career Success', 'Mental Clarity'],
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1615655114865-4cc47b6e29cf?w=400&h=400&fit=crop',
     rating: 4.8,
     inStock: true,
   },
@@ -29,7 +29,7 @@ const mockProducts = [
     caratWeight: 2.8,
     origin: 'Burma',
     benefits: ['Leadership', 'Confidence', 'Health'],
-    image: 'https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=400&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&h=400&fit=crop',
     rating: 4.9,
     inStock: true,
   },
@@ -42,7 +42,7 @@ const mockProducts = [
     caratWeight: 4.2,
     origin: 'Colombia',
     benefits: ['Intelligence', 'Communication', 'Business'],
-    image: 'https://images.unsplash.com/photo-1583937443566-6c668837cce3?w=400&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1583937443366-6c668838436e?w=400&h=400&fit=crop',
     rating: 4.7,
     inStock: true,
   },
@@ -55,7 +55,7 @@ const mockProducts = [
     caratWeight: 5.0,
     origin: 'Sri Lanka',
     benefits: ['Wisdom', 'Marriage', 'Prosperity'],
-    image: 'https://images.unsplash.com/photo-1615655406736-b37c4fabf923?w=400&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1608042314453-ae338d80c427?w=400&h=400&fit=crop',
     rating: 4.8,
     inStock: true,
   },
@@ -68,7 +68,7 @@ const mockProducts = [
     caratWeight: 6.5,
     origin: 'India',
     benefits: ['Protection', 'Intuition', 'Recovery'],
-    image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1551122087-f99a4ade8c1e?w=400&h=400&fit=crop',
     rating: 4.6,
     inStock: false,
   },
@@ -83,6 +83,84 @@ const mockProducts = [
     benefits: ['Calm', 'Emotional Balance', 'Beauty'],
     image: 'https://images.unsplash.com/photo-1518131672127-5fe53e12ee07?w=400&h=400&fit=crop',
     rating: 4.7,
+    inStock: true,
+  },
+  {
+    id: '7',
+    name: 'Red Coral (Moonga)',
+    price: 15000,
+    category: 'Organic',
+    gemstoneType: 'Red Coral',
+    caratWeight: 7.0,
+    origin: 'Italy',
+    benefits: ['Courage', 'Vitality', 'Property'],
+    image: 'https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?w=400&h=400&fit=crop',
+    rating: 4.5,
+    inStock: true,
+  },
+  {
+    id: '8',
+    name: 'Hessonite Garnet (Gomed)',
+    price: 22000,
+    category: 'Semi-Precious',
+    gemstoneType: 'Hessonite',
+    caratWeight: 5.5,
+    origin: 'Sri Lanka',
+    benefits: ['Rahu Relief', 'Mental Peace', 'Career'],
+    image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=400&h=400&fit=crop',
+    rating: 4.6,
+    inStock: true,
+  },
+  {
+    id: '9',
+    name: 'White Sapphire (Safed Pukhraj)',
+    price: 28000,
+    category: 'Precious',
+    gemstoneType: 'White Sapphire',
+    caratWeight: 4.0,
+    origin: 'Sri Lanka',
+    benefits: ['Venus Blessings', 'Love', 'Luxury'],
+    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&h=400&fit=crop',
+    rating: 4.7,
+    inStock: true,
+  },
+  {
+    id: '10',
+    name: 'Amethyst (Jamunia)',
+    price: 8000,
+    category: 'Semi-Precious',
+    gemstoneType: 'Amethyst',
+    caratWeight: 6.0,
+    origin: 'Brazil',
+    benefits: ['Peace', 'Meditation', 'Intuition'],
+    image: 'https://images.unsplash.com/photo-1615655406736-b37c4fabf923?w=400&h=400&fit=crop',
+    rating: 4.8,
+    inStock: true,
+  },
+  {
+    id: '11',
+    name: 'Aquamarine (Beruj)',
+    price: 25000,
+    category: 'Precious',
+    gemstoneType: 'Aquamarine',
+    caratWeight: 3.8,
+    origin: 'Brazil',
+    benefits: ['Courage', 'Communication', 'Travel'],
+    image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=400&h=400&fit=crop&sat=-100&hue=180',
+    rating: 4.6,
+    inStock: true,
+  },
+  {
+    id: '12',
+    name: 'Opal (Dudhiya Patthar)',
+    price: 35000,
+    category: 'Precious',
+    gemstoneType: 'Opal',
+    caratWeight: 4.5,
+    origin: 'Australia',
+    benefits: ['Creativity', 'Love', 'Confidence'],
+    image: 'https://images.unsplash.com/photo-1615655114865-4cc47b6e29cf?w=400&h=400&fit=crop&hue=45',
+    rating: 4.9,
     inStock: true,
   },
 ];
@@ -153,7 +231,7 @@ const GemstoneStore = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <Card 
                 key={product.id} 
@@ -175,7 +253,7 @@ const GemstoneStore = () => {
                   </Badge>
                 </div>
                 <CardContent className="pt-4">
-                  <h3 className="font-semibold text-cosmic-gold mb-1">{product.name}</h3>
+                  <h3 className="font-semibold text-cosmic-gold mb-1 line-clamp-1">{product.name}</h3>
                   
                   <div className="flex items-center gap-2 text-sm text-cosmic-silver mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -187,7 +265,7 @@ const GemstoneStore = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-3">
-                    {product.benefits.map((b) => (
+                    {product.benefits.slice(0, 2).map((b) => (
                       <Badge key={b} variant="outline" className="border-cosmic-cyan/30 text-cosmic-cyan text-xs">
                         {b}
                       </Badge>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, FileText, Download, Share2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
 
 const FreeKundli = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const FreeKundli = () => {
     birthPlace: '',
   });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [kundliResult, setKundliResult] = useState<string | null>(null);
+  const [kundliResult, setKundliResult] = useState<any>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,45 +33,254 @@ const FreeKundli = () => {
 
     setIsGenerating(true);
     
-    // Simulate AI generation (will be replaced with actual API call)
+    // Simulate AI generation
     setTimeout(() => {
-      setKundliResult(`
-## Birth Chart Analysis for ${formData.name}
+      const birthDateObj = new Date(formData.birthDate);
+      const month = birthDateObj.getMonth() + 1;
+      
+      // Determine sun sign based on date
+      const sunSigns = ['Capricorn', 'Aquarius', 'Pisces', 'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius'];
+      const sunSignIndex = (month + 9) % 12;
+      
+      // Determine moon sign (simplified calculation)
+      const moonSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+      const moonSignIndex = (birthDateObj.getDate() + month) % 12;
+      
+      // Determine ascendant based on time
+      const hour = parseInt(formData.birthTime.split(':')[0]);
+      const ascendantIndex = (hour + month) % 12;
+      const ascendants = ['Aries (Mesh)', 'Taurus (Vrishabh)', 'Gemini (Mithun)', 'Cancer (Karka)', 'Leo (Simha)', 'Virgo (Kanya)', 'Libra (Tula)', 'Scorpio (Vrishchik)', 'Sagittarius (Dhanu)', 'Capricorn (Makar)', 'Aquarius (Kumbh)', 'Pisces (Meen)'];
 
-**Birth Details:**
-- Date: ${formData.birthDate}
-- Time: ${formData.birthTime}
-- Place: ${formData.birthPlace}
-
-### Sun Sign: Leo (Simha)
-Your Sun is placed in Leo, indicating a strong personality with natural leadership qualities. You are creative, generous, and have a warm heart.
-
-### Moon Sign: Cancer (Karka)
-The Moon in Cancer brings emotional depth and strong intuition. Family and home are important to you.
-
-### Ascendant (Lagna): Virgo (Kanya)
-With Virgo rising, you present yourself as analytical, practical, and detail-oriented to the world.
-
-### Key Planetary Positions:
-- **Mars in Aries**: Strong willpower and initiative
-- **Venus in Libra**: Harmonious relationships and artistic abilities
-- **Jupiter in Sagittarius**: Wisdom and spiritual growth
-- **Saturn in Capricorn**: Discipline and long-term success
-
-### Favorable Periods:
-The next 6 months are excellent for career advancement and personal growth. Jupiter's transit supports education and travel.
-
-### Recommended Remedies:
-1. Wear a Yellow Sapphire for enhanced wisdom
-2. Chant the Gayatri Mantra daily
-3. Donate to educational causes on Thursdays
-      `);
+      setKundliResult({
+        name: formData.name,
+        birthDate: formData.birthDate,
+        birthTime: formData.birthTime,
+        birthPlace: formData.birthPlace,
+        sunSign: sunSigns[sunSignIndex],
+        moonSign: moonSigns[moonSignIndex],
+        ascendant: ascendants[ascendantIndex],
+        planets: [
+          { name: 'Sun (Surya)', sign: sunSigns[sunSignIndex], house: 1, effects: 'Strong willpower and leadership qualities' },
+          { name: 'Moon (Chandra)', sign: moonSigns[moonSignIndex], house: 4, effects: 'Emotional depth and strong intuition' },
+          { name: 'Mars (Mangal)', sign: 'Aries', house: 5, effects: 'Energy, courage, and competitive spirit' },
+          { name: 'Mercury (Budh)', sign: 'Gemini', house: 3, effects: 'Excellent communication and analytical skills' },
+          { name: 'Jupiter (Guru)', sign: 'Sagittarius', house: 9, effects: 'Wisdom, spirituality, and good fortune' },
+          { name: 'Venus (Shukra)', sign: 'Libra', house: 7, effects: 'Love, beauty, and harmonious relationships' },
+          { name: 'Saturn (Shani)', sign: 'Capricorn', house: 10, effects: 'Discipline, hard work, and career success' },
+          { name: 'Rahu', sign: 'Gemini', house: 3, effects: 'Unconventional thinking and foreign connections' },
+          { name: 'Ketu', sign: 'Sagittarius', house: 9, effects: 'Spiritual growth and past life karma' },
+        ],
+        predictions: {
+          career: 'Your chart indicates strong potential for leadership roles. The period ahead is favorable for career advancement and recognition.',
+          relationships: 'Venus placement suggests harmonious relationships. Marriage and partnerships will bring happiness and stability.',
+          health: 'Overall good health indicated. Pay attention to stress management and maintain regular exercise.',
+          finance: 'Jupiter\'s position favors financial growth. Investments made during this period are likely to yield good returns.',
+          spirituality: 'Strong inclination towards spiritual practices. Meditation and yoga will bring inner peace.',
+        },
+        remedies: [
+          'Wear a Yellow Sapphire (Pukhraj) for Jupiter\'s blessings',
+          'Chant Gayatri Mantra 108 times daily',
+          'Donate to educational causes on Thursdays',
+          'Feed birds and animals regularly',
+          'Perform Surya Namaskar at sunrise',
+        ],
+        luckyDetails: {
+          numbers: [3, 7, 9, 12, 21],
+          colors: ['Gold', 'Yellow', 'Orange'],
+          days: ['Thursday', 'Sunday'],
+          direction: 'North-East',
+          gemstone: 'Yellow Sapphire',
+        },
+      });
       setIsGenerating(false);
       toast({
         title: 'Kundli Generated!',
         description: 'Your personalized birth chart is ready.',
       });
     }, 3000);
+  };
+
+  const downloadPDF = () => {
+    if (!kundliResult) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPos = 20;
+
+    // Helper function to add centered text
+    const addCenteredText = (text: string, y: number, fontSize: number = 12) => {
+      doc.setFontSize(fontSize);
+      doc.text(text, pageWidth / 2, y, { align: 'center' });
+    };
+
+    // Helper function to add a section header
+    const addSectionHeader = (text: string) => {
+      yPos += 10;
+      doc.setFillColor(218, 165, 32); // Gold color
+      doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(text, margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      yPos += 10;
+    };
+
+    // Title
+    doc.setFillColor(30, 30, 50);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(218, 165, 32);
+    addCenteredText('ASTRO VICHAR', 15, 20);
+    doc.setTextColor(255, 255, 255);
+    addCenteredText('Vedic Birth Chart (Kundli)', 28, 14);
+    
+    yPos = 50;
+    doc.setTextColor(0, 0, 0);
+
+    // Birth Details Section
+    addSectionHeader('Birth Details');
+    doc.setFontSize(10);
+    doc.text(`Name: ${kundliResult.name}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Date of Birth: ${new Date(kundliResult.birthDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Time of Birth: ${kundliResult.birthTime}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Place of Birth: ${kundliResult.birthPlace}`, margin, yPos);
+    yPos += 6;
+
+    // Basic Chart Info
+    addSectionHeader('Basic Chart Information');
+    doc.setFontSize(10);
+    doc.text(`Sun Sign (Rashi): ${kundliResult.sunSign}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Moon Sign (Chandra Rashi): ${kundliResult.moonSign}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Ascendant (Lagna): ${kundliResult.ascendant}`, margin, yPos);
+    yPos += 6;
+
+    // Planetary Positions
+    addSectionHeader('Planetary Positions (Graha Sthiti)');
+    doc.setFontSize(9);
+    kundliResult.planets.forEach((planet: any) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${planet.name}:`, margin, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${planet.sign} (House ${planet.house})`, margin + 50, yPos);
+      yPos += 5;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Effect: ${planet.effects}`, margin + 5, yPos);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(9);
+      yPos += 7;
+    });
+
+    // Predictions
+    doc.addPage();
+    yPos = 20;
+    addSectionHeader('Life Predictions');
+    doc.setFontSize(9);
+    Object.entries(kundliResult.predictions).forEach(([key, value]) => {
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${key.charAt(0).toUpperCase() + key.slice(1)}:`, margin, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 5;
+      const lines = doc.splitTextToSize(value as string, pageWidth - 2 * margin);
+      doc.text(lines, margin, yPos);
+      yPos += lines.length * 5 + 5;
+    });
+
+    // Remedies
+    addSectionHeader('Recommended Remedies');
+    doc.setFontSize(9);
+    kundliResult.remedies.forEach((remedy: string, index: number) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(`${index + 1}. ${remedy}`, margin, yPos);
+      yPos += 6;
+    });
+
+    // Lucky Details
+    addSectionHeader('Lucky Details');
+    doc.setFontSize(9);
+    doc.text(`Lucky Numbers: ${kundliResult.luckyDetails.numbers.join(', ')}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Lucky Colors: ${kundliResult.luckyDetails.colors.join(', ')}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Lucky Days: ${kundliResult.luckyDetails.days.join(', ')}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Lucky Direction: ${kundliResult.luckyDetails.direction}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Recommended Gemstone: ${kundliResult.luckyDetails.gemstone}`, margin, yPos);
+
+    // Footer on each page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Generated by Astro Vichar | astrovichar8@gmail.com | Page ${i} of ${pageCount}`, pageWidth / 2, 290, { align: 'center' });
+    }
+
+    // Save the PDF
+    doc.save(`Kundli_${kundliResult.name.replace(/\s+/g, '_')}.pdf`);
+    
+    toast({
+      title: 'PDF Downloaded!',
+      description: 'Your Kundli has been saved as PDF.',
+    });
+  };
+
+  const formatResult = () => {
+    if (!kundliResult) return '';
+    
+    return `
+## Birth Chart Analysis for ${kundliResult.name}
+
+**Birth Details:**
+- Date: ${new Date(kundliResult.birthDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+- Time: ${kundliResult.birthTime}
+- Place: ${kundliResult.birthPlace}
+
+### Sun Sign: ${kundliResult.sunSign}
+Your Sun is placed in ${kundliResult.sunSign}, indicating strong personality traits and life direction.
+
+### Moon Sign: ${kundliResult.moonSign}
+The Moon in ${kundliResult.moonSign} brings emotional depth and influences your mental state.
+
+### Ascendant (Lagna): ${kundliResult.ascendant}
+With ${kundliResult.ascendant} rising, you present yourself with these qualities to the world.
+
+### Key Planetary Positions:
+${kundliResult.planets.map((p: any) => `- **${p.name}** in ${p.sign}: ${p.effects}`).join('\n')}
+
+### Predictions:
+- **Career:** ${kundliResult.predictions.career}
+- **Relationships:** ${kundliResult.predictions.relationships}
+- **Health:** ${kundliResult.predictions.health}
+- **Finance:** ${kundliResult.predictions.finance}
+
+### Recommended Remedies:
+${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n')}
+
+### Lucky Details:
+- Lucky Numbers: ${kundliResult.luckyDetails.numbers.join(', ')}
+- Lucky Colors: ${kundliResult.luckyDetails.colors.join(', ')}
+- Lucky Days: ${kundliResult.luckyDetails.days.join(', ')}
+    `;
   };
 
   return (
@@ -179,11 +389,15 @@ The next 6 months are excellent for career advancement and personal growth. Jupi
                   <div className="space-y-4">
                     <div className="prose prose-invert prose-sm max-h-[400px] overflow-y-auto">
                       <div className="text-cosmic-silver whitespace-pre-wrap text-sm">
-                        {kundliResult}
+                        {formatResult()}
                       </div>
                     </div>
                     <div className="flex gap-2 pt-4 border-t border-cosmic-gold/20">
-                      <Button variant="outline" className="flex-1 border-cosmic-gold/50 text-cosmic-gold hover:bg-cosmic-gold/10">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 border-cosmic-gold/50 text-cosmic-gold hover:bg-cosmic-gold/10"
+                        onClick={downloadPDF}
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Download PDF
                       </Button>

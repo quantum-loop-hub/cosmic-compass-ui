@@ -73,26 +73,6 @@ const HeroSection = () => {
             </Button>
           </Link>
         </div>
-
-        {/* Trust indicators */}
-        <div className="mt-16 flex flex-wrap justify-center gap-8 text-cosmic-silver animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-cosmic-gold">50K+</div>
-            <div className="text-sm">Kundlis Generated</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-cosmic-gold">10K+</div>
-            <div className="text-sm">Happy Clients</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-cosmic-gold">100+</div>
-            <div className="text-sm">Expert Astrologers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-cosmic-gold">4.9★</div>
-            <div className="text-sm">Client Rating</div>
-          </div>
-        </div>
       </div>
     </section>
   );
