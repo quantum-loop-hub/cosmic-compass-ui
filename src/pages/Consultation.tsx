@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Video, Clock, Languages, Calendar, Mail, Play } from 'lucide-react';
 import { useState } from 'react';
+import astrologerImage from '@/assets/astrovichar.png';
 
 const astrologer = {
   name: 'Astro Vichar',
@@ -14,14 +15,13 @@ const astrologer = {
   consultations: 5000,
   languages: ['Hindi', 'English'],
   bio: 'Welcome to Astro Vichar! With over 15 years of experience in Vedic Astrology, I provide personalized guidance for life\'s important decisions. From career and relationships to health and prosperity, get accurate predictions and effective remedies tailored just for you.',
-  calLink: 'https://cal.com/astrovichar', // Update with actual Cal.com link
+  calLink: 'https://cal.com/astrovichar',
 };
 
 const Consultation = () => {
   const [showVideo, setShowVideo] = useState(false);
 
   const handleBooking = () => {
-    // Open Cal.com booking widget
     window.open(astrologer.calLink, '_blank');
   };
 
@@ -51,10 +51,11 @@ const Consultation = () => {
                   {/* Circular Profile Image */}
                   <div className="relative mb-6">
                     <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-full border-4 border-primary overflow-hidden glow-gold">
-                      {/* Placeholder - will be replaced with actual image */}
-                      <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                        <Star className="w-16 h-16 text-primary animate-twinkle" />
-                      </div>
+                      <img 
+                        src={astrologerImage} 
+                        alt="Astro Vichar" 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-card" title="Available" />
                   </div>
@@ -71,12 +72,15 @@ const Consultation = () => {
                     </Button>
                     
                     {showVideo && (
-                      <div className="mt-4 rounded-lg overflow-hidden border border-primary/30 aspect-video bg-muted flex items-center justify-center">
-                        {/* Placeholder for video - will be replaced with actual video */}
-                        <div className="text-center p-4">
-                          <Video className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-muted-foreground text-sm">Video will appear here</p>
-                        </div>
+                      <div className="mt-4 rounded-lg overflow-hidden border border-primary/30 aspect-[9/16] max-h-[400px] bg-muted">
+                        <video 
+                          src="/videos/intro-astro.mp4"
+                          controls
+                          autoPlay
+                          className="w-full h-full object-contain"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
                       </div>
                     )}
                   </div>
