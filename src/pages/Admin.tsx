@@ -12,11 +12,12 @@ import {
   ShoppingBag,
   TrendingUp,
   IndianRupee,
-  Star
+  Star,
+  ShieldX
 } from 'lucide-react';
 
 const Admin = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,8 +36,40 @@ const Admin = () => {
     );
   }
 
-  // For demo purposes, show admin panel even without checking role
-  // In production, you'd check isAdmin after Supabase is connected
+  // Server-validated admin check - redirect non-admin users
+  if (!loading && user && !isAdmin) {
+    return (
+      <Layout>
+        <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="bg-cosmic-dark/50 border-red-500/50">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="p-4 bg-red-500/10 rounded-full">
+                    <ShieldX className="w-12 h-12 text-red-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-red-400">Access Denied</h2>
+                  <p className="text-cosmic-silver">
+                    You do not have permission to access the admin dashboard. 
+                    This area is restricted to administrators only.
+                  </p>
+                  <p className="text-cosmic-silver text-sm">
+                    Current role: {userRole || 'No role assigned'}
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/')}
+                    className="mt-4 bg-cosmic-gold hover:bg-cosmic-gold/80 text-cosmic-darker"
+                  >
+                    Return to Home
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const stats = [
     { icon: Users, label: 'Total Users', value: '12,450', change: '+12%' },
@@ -194,11 +227,11 @@ const Admin = () => {
               <div className="flex items-start gap-4">
                 <Star className="w-8 h-8 text-cosmic-purple flex-shrink-0" />
                 <div>
-                  <h3 className="text-cosmic-purple font-semibold">Connect Supabase for Full Functionality</h3>
+                  <h3 className="text-cosmic-purple font-semibold">Admin Access Secured</h3>
                   <p className="text-cosmic-silver text-sm mt-1">
-                    To enable real data management, user authentication, and database operations, 
-                    please connect your Supabase project. This will unlock all admin features including 
-                    user management, booking management, order processing, and more.
+                    This dashboard is protected with server-side role validation. 
+                    Only users with the 'admin' role in the database can access this page.
+                    To grant admin access to a user, add their user_id to the user_roles table with role 'admin'.
                   </p>
                 </div>
               </div>
