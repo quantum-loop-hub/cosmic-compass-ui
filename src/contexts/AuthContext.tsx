@@ -23,12 +23,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
 
+  // Fetch user role from database using security definer function
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_user_role', { _user_id: userId });
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        setUserRole(null);
+        return;
+      }
+      
+      setUserRole(data as AppRole | null);
+    } catch (err) {
+      console.error('Error in fetchUserRole:', err);
+      setUserRole(null);
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Fetch role using setTimeout to avoid Supabase deadlock
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserRole(session.user.id);
+          }, 0);
+        } else {
+          setUserRole(null);
+        }
       }
     );
 
@@ -36,6 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -63,8 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
   };
 
+  // isAdmin is now based on server-validated role data
+  const isAdmin = userRole === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut, isAdmin: userRole === 'admin' }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
