@@ -15,7 +15,7 @@ const astrologer = {
   consultations: 5000,
   languages: ['Hindi', 'English'],
   bio: 'Welcome to Astro Vichar! With over 15 years of experience in Vedic Astrology, I provide personalized guidance for life\'s important decisions. From career and relationships to health and prosperity, get accurate predictions and effective remedies tailored just for you.',
-  calLink: 'https://cal.com/astro-vichar',
+  calLink: 'https://cal.id/astro-vichar',
 };
 
 const Consultation = () => {
