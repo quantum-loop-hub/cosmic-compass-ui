@@ -121,7 +121,7 @@ const Auth = () => {
                     id="email"
                     type="email"
                     {...loginForm.register('email')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                    className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                     placeholder="you@example.com"
                   />
                   {loginForm.formState.errors.email && (
@@ -135,7 +135,7 @@ const Auth = () => {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       {...loginForm.register('password')}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500 pr-10"
                       placeholder="••••••••"
                     />
                     <button
@@ -165,7 +165,7 @@ const Auth = () => {
                   <Input
                     id="fullName"
                     {...signupForm.register('fullName')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                    className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                     placeholder="Your Name"
                   />
                   {signupForm.formState.errors.fullName && (
@@ -178,7 +178,7 @@ const Auth = () => {
                     id="signupEmail"
                     type="email"
                     {...signupForm.register('email')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                    className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                     placeholder="you@example.com"
                   />
                   {signupForm.formState.errors.email && (
@@ -192,7 +192,7 @@ const Auth = () => {
                       id="signupPassword"
                       type={showPassword ? "text" : "password"}
                       {...signupForm.register('password')}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500 pr-10"
                       placeholder="••••••••"
                     />
                     <button
@@ -214,7 +214,7 @@ const Auth = () => {
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       {...signupForm.register('confirmPassword')}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500 pr-10"
                       placeholder="••••••••"
                     />
                     <button
