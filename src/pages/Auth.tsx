@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Star } from 'lucide-react';
+import { Loader2, Star, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -32,6 +32,8 @@ type SignupFormData = z.infer<typeof signupSchema>;
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -128,13 +130,22 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-cosmic-silver">{t('auth.password')}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    {...loginForm.register('password')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      {...loginForm.register('password')}
+                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {loginForm.formState.errors.password && (
                     <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
                   )}
@@ -176,26 +187,44 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupPassword" className="text-cosmic-silver">{t('auth.password')}</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    {...signupForm.register('password')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signupPassword"
+                      type={showPassword ? "text" : "password"}
+                      {...signupForm.register('password')}
+                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {signupForm.formState.errors.password && (
                     <p className="text-red-400 text-sm">{signupForm.formState.errors.password.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-cosmic-silver">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    {...signupForm.register('confirmPassword')}
-                    className="bg-cosmic-darker border-cosmic-gold/30 text-white"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...signupForm.register('confirmPassword')}
+                      className="bg-cosmic-darker border-cosmic-gold/30 text-white pr-10"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {signupForm.formState.errors.confirmPassword && (
                     <p className="text-red-400 text-sm">{signupForm.formState.errors.confirmPassword.message}</p>
                   )}
