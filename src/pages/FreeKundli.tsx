@@ -321,7 +321,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                       placeholder="Enter your name"
                     />
                   </div>
@@ -332,7 +332,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       type="date"
                       value={formData.birthDate}
                       onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -342,7 +342,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       type="time"
                       value={formData.birthTime}
                       onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -351,7 +351,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       id="birthPlace"
                       value={formData.birthPlace}
                       onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
-                      className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+                      className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                       placeholder="City, Country"
                     />
                   </div>

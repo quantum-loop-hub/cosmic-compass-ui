@@ -86,7 +86,7 @@ const KundliMatching = () => {
           <Input
             value={person.name}
             onChange={(e) => setPerson({ ...person, name: e.target.value })}
-            className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+            className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
             placeholder="Enter name"
           />
         </div>
@@ -96,7 +96,7 @@ const KundliMatching = () => {
             type="date"
             value={person.birthDate}
             onChange={(e) => setPerson({ ...person, birthDate: e.target.value })}
-            className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+            className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
           />
         </div>
         <div className="space-y-2">
@@ -105,7 +105,7 @@ const KundliMatching = () => {
             type="time"
             value={person.birthTime}
             onChange={(e) => setPerson({ ...person, birthTime: e.target.value })}
-            className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+            className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
           />
         </div>
         <div className="space-y-2">
@@ -113,7 +113,7 @@ const KundliMatching = () => {
           <Input
             value={person.birthPlace}
             onChange={(e) => setPerson({ ...person, birthPlace: e.target.value })}
-            className="bg-cosmic-darker border-cosmic-gold/30 text-white"
+            className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
             placeholder="City, Country"
           />
         </div>
