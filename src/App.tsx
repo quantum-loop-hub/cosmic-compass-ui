@@ -13,6 +13,7 @@ import KundliMatching from "./pages/KundliMatching";
 import Calculators from "./pages/Calculators";
 import Consultation from "./pages/Consultation";
 import GemstoneStore from "./pages/GemstoneStore";
+import GemstoneDetail from "./pages/GemstoneDetail";
 import PalmReading from "./pages/PalmReading";
 import Horoscope from "./pages/Horoscope";
 import Admin from "./pages/Admin";
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/calculators" element={<Calculators />} />
               <Route path="/consultation" element={<Consultation />} />
               <Route path="/gemstone-store" element={<GemstoneStore />} />
+              <Route path="/gemstone/:id" element={<GemstoneDetail />} />
               <Route path="/palm-reading" element={<PalmReading />} />
               <Route path="/horoscope/:sign" element={<Horoscope />} />
               <Route path="/admin" element={<Admin />} />
