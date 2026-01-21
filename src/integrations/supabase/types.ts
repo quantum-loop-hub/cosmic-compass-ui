@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          notes: string | null
+          order_number: string
+          order_status: string
+          payment_method: string | null
+          payment_status: string
+          shipping_address: Json | null
+          shipping_cost: number
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number: string
+          order_status?: string
+          payment_method?: string | null
+          payment_status?: string
+          shipping_address?: Json | null
+          shipping_cost?: number
+          subtotal: number
+          tax_amount?: number
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_number?: string
+          order_status?: string
+          payment_method?: string | null
+          payment_status?: string
+          shipping_address?: Json | null
+          shipping_cost?: number
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          order_count: number
+          phone: string | null
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          order_count?: number
+          phone?: string | null
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          order_count?: number
+          phone?: string | null
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
