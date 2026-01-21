@@ -17,6 +17,9 @@ import GemstoneDetail from "./pages/GemstoneDetail";
 import PalmReading from "./pages/PalmReading";
 import Horoscope from "./pages/Horoscope";
 import Admin from "./pages/Admin";
+import AdminCustomers from "./pages/AdminCustomers";
+import GemstoneCompare from "./pages/GemstoneCompare";
+import PurchaseHistory from "./pages/PurchaseHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +45,9 @@ const App = () => (
               <Route path="/palm-reading" element={<PalmReading />} />
               <Route path="/horoscope/:sign" element={<Horoscope />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/customers" element={<AdminCustomers />} />
+              <Route path="/gemstone-compare" element={<GemstoneCompare />} />
+              <Route path="/purchase-history" element={<PurchaseHistory />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
