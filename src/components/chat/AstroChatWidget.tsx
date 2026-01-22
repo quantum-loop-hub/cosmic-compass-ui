@@ -80,10 +80,10 @@ const AstroChatWidget: React.FC = () => {
     setIsOpen(true);
     if (!chatStartTime) {
       setChatStartTime(Date.now());
-      // Add welcome message
+      // Add welcome message in both languages
       setMessages([{
         role: 'assistant',
-        content: 'नमस्कार! 🙏 I am Astro Gautam. With 14 years of experience in Vedic Astrology and Jyotish Shastra, I\'m here to guide you. How may I help you today? You can ask about your zodiac sign, planetary influences, or any life concerns.'
+        content: '🙏 नमस्कार! मैं एस्ट्रो गौतम हूं।\n\nI am Astro Gautam, your Vedic Astrology guide with 14+ years of experience. आप मुझसे हिंदी या English में कुछ भी पूछ सकते हैं।\n\n**आप पूछ सकते हैं / You can ask about:**\n• राशिफल / Horoscope\n• कुंडली विश्लेषण / Kundli Analysis\n• विवाह मिलान / Marriage Compatibility\n• करियर मार्गदर्शन / Career Guidance\n• रत्न सुझाव / Gemstone Recommendations\n• उपाय / Remedies\n\nआपका क्या प्रश्न है? How may I help you today?'
       }]);
     }
   };
@@ -101,14 +101,29 @@ const AstroChatWidget: React.FC = () => {
         body: { messages: [...messages, userMessage] },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw error;
+      }
 
-      const assistantMessage = data.choices?.[0]?.message?.content || 'I apologize, I could not process your request. Please try again.';
+      // Handle rate limit and payment errors
+      if (data?.code === 'RATE_LIMITED') {
+        toast.error('कृपया कुछ देर बाद प्रयास करें / Please try again in a moment');
+        return;
+      }
+      
+      if (data?.code === 'PAYMENT_REQUIRED') {
+        toast.error('सेवा अस्थायी रूप से अनुपलब्ध है / Service temporarily unavailable');
+        return;
+      }
+
+      const assistantMessage = data.choices?.[0]?.message?.content || 
+        'क्षमा करें, मैं आपके प्रश्न का उत्तर नहीं दे पाया। कृपया पुनः प्रयास करें। / I apologize, I could not process your request. Please try again.';
       
       setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Unable to get response. Please try again.');
+      toast.error('उत्तर प्राप्त करने में असमर्थ / Unable to get response. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -220,13 +235,18 @@ const AstroChatWidget: React.FC = () => {
           {hasExpired && (
             <div className="p-4 bg-secondary/50 border-t border-primary/30">
               <p className="text-sm text-center text-foreground mb-3">
-                ⏰ Your free chat time has ended. For a detailed personal consultation with Astro Gautam, please book a session.
+                ⏰ आपका मुफ्त चैट समय समाप्त हो गया है।<br/>
+                Your free chat time has ended.
+              </p>
+              <p className="text-xs text-center text-muted-foreground mb-3">
+                एस्ट्रो गौतम जी के साथ विस्तृत परामर्श के लिए बुक करें।<br/>
+                Book a detailed consultation with Astro Gautam.
               </p>
               <Button 
                 onClick={handleBookConsultation}
                 className="w-full btn-cosmic"
               >
-                Book Consultation
+                परामर्श बुक करें / Book Consultation
               </Button>
             </div>
           )}
@@ -239,7 +259,7 @@ const AstroChatWidget: React.FC = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask about your zodiac, career, love..."
+                  placeholder="राशि, करियर, प्रेम के बारे में पूछें... / Ask in Hindi or English..."
                   className="flex-1 bg-muted border-primary/20 focus:border-primary"
                   disabled={isLoading}
                 />
@@ -252,6 +272,9 @@ const AstroChatWidget: React.FC = () => {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                हिंदी या English में पूछें • Ask in Hindi or English
+              </p>
             </div>
           )}
         </div>
