@@ -107,6 +107,15 @@ const AdminCustomers = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+
+  const orderStatuses = [
+    { value: 'pending', label: 'Pending', color: 'bg-gray-500/20 text-gray-400' },
+    { value: 'processing', label: 'Processing', color: 'bg-yellow-500/20 text-yellow-400' },
+    { value: 'shipped', label: 'Shipped', color: 'bg-blue-500/20 text-blue-400' },
+    { value: 'delivered', label: 'Delivered', color: 'bg-green-500/20 text-green-400' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500/20 text-red-400' },
+  ];
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -154,6 +163,35 @@ const AdminCustomers = () => {
       toast.error('Failed to load customer data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingOrder(orderId);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: newStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, order_status: newStatus } : order
+      ));
+      
+      // Update customer orders if dialog is open
+      setCustomerOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, order_status: newStatus } : order
+      ));
+
+      toast.success(`Order status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error('Failed to update order status');
+    } finally {
+      setUpdatingOrder(null);
     }
   };
 
@@ -515,7 +553,7 @@ const AdminCustomers = () => {
                       <TableHead className="text-cosmic-gold">Customer</TableHead>
                       <TableHead className="text-cosmic-gold text-center">Items</TableHead>
                       <TableHead className="text-cosmic-gold text-right">Amount</TableHead>
-                      <TableHead className="text-cosmic-gold text-center">Status</TableHead>
+                      <TableHead className="text-cosmic-gold text-center">Update Status</TableHead>
                       <TableHead className="text-cosmic-gold">Date</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -535,9 +573,24 @@ const AdminCustomers = () => {
                           ₹{Number(order.total_amount).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge className={getStatusColor(order.order_status)}>
-                            {order.order_status}
-                          </Badge>
+                          <Select 
+                            value={order.order_status} 
+                            onValueChange={(value) => updateOrderStatus(order.id, value)}
+                            disabled={updatingOrder === order.id}
+                          >
+                            <SelectTrigger className={`w-32 h-8 text-xs ${orderStatuses.find(s => s.value === order.order_status)?.color || ''} border-0`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-cosmic-dark border-cosmic-gold/30">
+                              {orderStatuses.map((status) => (
+                                <SelectItem key={status.value} value={status.value}>
+                                  <span className={`${status.color} px-2 py-0.5 rounded text-xs`}>
+                                    {status.label}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-cosmic-light/70 text-sm">
                           {format(new Date(order.created_at), 'dd MMM yyyy')}
@@ -680,11 +733,26 @@ const AdminCustomers = () => {
                                 {format(new Date(order.created_at), 'dd MMM yyyy, hh:mm a')}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <Badge className={getStatusColor(order.order_status)}>
-                                {order.order_status}
-                              </Badge>
-                              <p className="text-cosmic-gold font-bold mt-1">
+                            <div className="text-right space-y-2">
+                              <Select 
+                                value={order.order_status} 
+                                onValueChange={(value) => updateOrderStatus(order.id, value)}
+                                disabled={updatingOrder === order.id}
+                              >
+                                <SelectTrigger className={`w-28 h-7 text-xs ${orderStatuses.find(s => s.value === order.order_status)?.color || ''} border-0`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-cosmic-dark border-cosmic-gold/30">
+                                  {orderStatuses.map((status) => (
+                                    <SelectItem key={status.value} value={status.value}>
+                                      <span className={`${status.color} px-2 py-0.5 rounded text-xs`}>
+                                        {status.label}
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-cosmic-gold font-bold">
                                 ₹{Number(order.total_amount).toLocaleString()}
                               </p>
                             </div>

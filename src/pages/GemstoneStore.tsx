@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingCart, Search, Gem, Star, Filter, Plus, Minus, Trash2, X, Heart } from 'lucide-react';
+import { ShoppingCart, Search, Gem, Star, Filter, Plus, Minus, Trash2, X, Heart, GitCompare, Sparkles } from 'lucide-react';
 import { useGemstoneStore } from '@/hooks/useGemstoneStore';
 import { categories, priceRanges, sortOptions, mockProducts } from '@/data/gemstoneProducts';
+import { toast } from 'sonner';
+
+const COMPARE_KEY = 'gemstone_compare';
 
 const GemstoneStore = () => {
+  const navigate = useNavigate();
   const {
     searchQuery,
     cart,
@@ -46,11 +50,62 @@ const GemstoneStore = () => {
 
   const [activeTab, setActiveTab] = useState('all');
   const wishlistProducts = getWishlistProducts();
+  const [compareList, setCompareList] = useState<string[]>(() => {
+    const saved = localStorage.getItem(COMPARE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showUpdateBanner, setShowUpdateBanner] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem(COMPARE_KEY, JSON.stringify(compareList));
+  }, [compareList]);
+
+  const toggleCompare = (productId: string) => {
+    setCompareList(prev => {
+      if (prev.includes(productId)) {
+        toast.info('Removed from comparison');
+        return prev.filter(id => id !== productId);
+      } else {
+        if (prev.length >= 4) {
+          toast.warning('Maximum 4 items can be compared');
+          return prev;
+        }
+        toast.success('Added to comparison');
+        return [...prev, productId];
+      }
+    });
+  };
+
+  const isInCompare = (productId: string) => compareList.includes(productId);
+
+  const goToCompare = () => {
+    if (compareList.length < 2) {
+      toast.warning('Select at least 2 gemstones to compare');
+      return;
+    }
+    navigate(`/gemstone-compare?ids=${compareList.join(',')}`);
+  };
 
   return (
     <Layout>
       <div className="min-h-screen py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {/* Update Banner */}
+          {showUpdateBanner && (
+            <div className="mb-6 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-lg p-4 flex items-center justify-between animate-fade-up">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                <div>
+                  <p className="text-primary font-semibold text-sm sm:text-base">🎉 New Gemstones Added!</p>
+                  <p className="text-muted-foreground text-xs sm:text-sm">We've added 8 new precious and semi-precious gemstones to our collection.</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowUpdateBanner(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
             <div className="flex justify-center mb-4">
@@ -317,14 +372,25 @@ const GemstoneStore = () => {
                               {product.name}
                             </h3>
                           </Link>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className={`h-8 w-8 shrink-0 ${isInWishlist(product.id) ? 'text-red-500' : 'text-muted-foreground'}`}
-                            onClick={() => toggleWishlist(product.id)}
-                          >
-                            <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className={`h-7 w-7 shrink-0 ${isInCompare(product.id) ? 'text-blue-500 bg-blue-500/10' : 'text-muted-foreground'}`}
+                              onClick={() => toggleCompare(product.id)}
+                              title="Compare"
+                            >
+                              <GitCompare className={`w-3.5 h-3.5 ${isInCompare(product.id) ? '' : ''}`} />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className={`h-7 w-7 shrink-0 ${isInWishlist(product.id) ? 'text-red-500' : 'text-muted-foreground'}`}
+                              onClick={() => toggleWishlist(product.id)}
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-2 flex-wrap">
@@ -464,6 +530,33 @@ const GemstoneStore = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Compare Bar */}
+      {compareList.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card border border-primary/50 rounded-full shadow-lg px-4 py-2 flex items-center gap-3 animate-fade-up">
+          <div className="flex items-center gap-2">
+            <GitCompare className="w-5 h-5 text-primary" />
+            <span className="text-foreground font-medium text-sm">
+              {compareList.length} item{compareList.length !== 1 ? 's' : ''} selected
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-primary/50 text-primary h-8"
+            onClick={() => setCompareList([])}
+          >
+            Clear
+          </Button>
+          <Button
+            size="sm"
+            onClick={goToCompare}
+            className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground h-8"
+          >
+            Compare Now
+          </Button>
+        </div>
+      )}
     </Layout>
   );
 };
