@@ -108,9 +108,9 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not set');
     }
 
-    const { messages } = await req.json();
+    const { messages, stream = false } = await req.json();
     
-    console.log('Processing astro-chat request with', messages.length, 'messages');
+    console.log('Processing astro-chat request with', messages.length, 'messages, streaming:', stream);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -126,6 +126,7 @@ serve(async (req) => {
         ],
         max_tokens: 1000,
         temperature: 0.7,
+        stream: stream,
       }),
     });
 
@@ -156,6 +157,20 @@ serve(async (req) => {
       throw new Error(`AI Gateway error: ${response.status}`);
     }
 
+    // Handle streaming response
+    if (stream) {
+      console.log('Returning streaming response');
+      return new Response(response.body, {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+
+    // Handle non-streaming response
     const data = await response.json();
     console.log('Successfully received AI response');
     
