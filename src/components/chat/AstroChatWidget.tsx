@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useChatHistory, ChatMessage as ChatMessageType } from '@/hooks/useChatHistory';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import ChatMessage from './ChatMessage';
 import ChatHistory from './ChatHistory';
 
@@ -57,6 +58,22 @@ const AstroChatWidget: React.FC = () => {
       toast.error(error);
     },
   });
+
+  // Text-to-speech hook
+  const [currentSpeakingIndex, setCurrentSpeakingIndex] = useState<number | null>(null);
+  const { speak, stop, isSpeaking, isLoading: isLoadingTTS } = useTextToSpeech({
+    onEnd: () => setCurrentSpeakingIndex(null),
+  });
+
+  const handleSpeak = useCallback((text: string, index: number) => {
+    if (isSpeaking && currentSpeakingIndex === index) {
+      stop();
+      setCurrentSpeakingIndex(null);
+    } else {
+      setCurrentSpeakingIndex(index);
+      speak(text);
+    }
+  }, [isSpeaking, currentSpeakingIndex, speak, stop]);
 
   // Timer effect
   useEffect(() => {
@@ -330,7 +347,14 @@ const AstroChatWidget: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {messages.map((message, index) => (
-                  <ChatMessage key={index} role={message.role} content={message.content} />
+                  <ChatMessage 
+                    key={index} 
+                    role={message.role} 
+                    content={message.content}
+                    onSpeak={message.role === 'assistant' ? (text) => handleSpeak(text, index) : undefined}
+                    isSpeaking={isSpeaking && currentSpeakingIndex === index}
+                    isLoadingTTS={isLoadingTTS && currentSpeakingIndex === index}
+                  />
                 ))}
                 
                 {/* Streaming message */}

@@ -1,1 +1,10 @@
 project_id = "enlxxeyzthcphnettkeu"
+
+[functions.astro-chat]
+verify_jwt = false
+
+[functions.elevenlabs-tts]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
