@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
@@ -6,8 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Valid notification types
+const VALID_NOTIFICATION_TYPES = ['consultation_booked', 'order_status_changed'] as const;
+type NotificationType = typeof VALID_NOTIFICATION_TYPES[number];
+
+// Valid order statuses
+const VALID_ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
+
 interface NotificationRequest {
-  type: 'consultation_booked' | 'order_status_changed';
+  type: NotificationType;
   email: string;
   data: {
     userName?: string;
@@ -19,23 +27,164 @@ interface NotificationRequest {
   };
 }
 
+// Email validation regex (RFC 5322 simplified)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Sanitize string to prevent XSS in HTML emails
+function sanitizeString(str: string | undefined, maxLength: number = 200): string {
+  if (!str) return '';
+  return str
+    .slice(0, maxLength)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('Missing or invalid Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration missing');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error('JWT validation failed:', claimsError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Notification request from authenticated user: ${userId}`);
+
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY not configured');
     }
 
     const resend = new Resend(RESEND_API_KEY);
-    const { type, email, data }: NotificationRequest = await req.json();
-
-    if (!email) {
-      throw new Error('Email is required');
+    
+    // Parse and validate request body
+    let requestBody: NotificationRequest;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    const { type, email, data } = requestBody;
+
+    // Validate email
+    if (!email || typeof email !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Email is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!EMAIL_REGEX.test(trimmedEmail) || trimmedEmail.length > 254) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate notification type
+    if (!type || !VALID_NOTIFICATION_TYPES.includes(type as NotificationType)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid notification type. Must be: consultation_booked or order_status_changed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate data object exists
+    if (!data || typeof data !== 'object') {
+      return new Response(
+        JSON.stringify({ error: 'Data object is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Type-specific validation
+    if (type === 'consultation_booked') {
+      if (!data.consultationDate || typeof data.consultationDate !== 'string') {
+        return new Response(
+          JSON.stringify({ error: 'Consultation date is required for consultation_booked notification' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (type === 'order_status_changed') {
+      if (!data.orderNumber || typeof data.orderNumber !== 'string') {
+        return new Response(
+          JSON.stringify({ error: 'Order number is required for order_status_changed notification' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (data.orderStatus && !VALID_ORDER_STATUSES.includes(data.orderStatus as typeof VALID_ORDER_STATUSES[number])) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid order status. Must be: pending, processing, shipped, delivered, or cancelled' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Validate items array if present
+    if (data.items !== undefined) {
+      if (!Array.isArray(data.items) || data.items.length > 50) {
+        return new Response(
+          JSON.stringify({ error: 'Items must be an array with maximum 50 items' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (!data.items.every(item => typeof item === 'string' && item.length <= 200)) {
+        return new Response(
+          JSON.stringify({ error: 'Each item must be a string with maximum 200 characters' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Sanitize all user-provided data for HTML output
+    const sanitizedData = {
+      userName: sanitizeString(data.userName, 100),
+      consultationDate: sanitizeString(data.consultationDate, 50),
+      consultationTime: sanitizeString(data.consultationTime, 50),
+      orderNumber: sanitizeString(data.orderNumber, 50),
+      orderStatus: data.orderStatus || 'pending',
+      items: data.items?.map(item => sanitizeString(item, 200)) || [],
+    };
 
     let subject = '';
     let htmlContent = '';
@@ -64,16 +213,16 @@ serve(async (req) => {
             <div class="header">
               <h1>✨ Consultation Confirmed!</h1>
             </div>
-            <p>नमस्ते ${data.userName || 'User'},</p>
+            <p>नमस्ते ${sanitizedData.userName || 'User'},</p>
             <p>Your consultation with Astro Vichar has been successfully booked.</p>
             <div class="content">
               <div class="detail">
                 <div class="detail-label">Date</div>
-                <div class="detail-value">📅 ${data.consultationDate || 'To be confirmed'}</div>
+                <div class="detail-value">📅 ${sanitizedData.consultationDate || 'To be confirmed'}</div>
               </div>
               <div class="detail">
                 <div class="detail-label">Time</div>
-                <div class="detail-value">🕐 ${data.consultationTime || 'To be confirmed'}</div>
+                <div class="detail-value">🕐 ${sanitizedData.consultationTime || 'To be confirmed'}</div>
               </div>
             </div>
             <p>You will receive a Google Meet link before your scheduled session.</p>
@@ -106,8 +255,8 @@ serve(async (req) => {
         cancelled: 'Your order has been cancelled. Contact us if you have questions.',
       };
 
-      const status = data.orderStatus || 'pending';
-      subject = `${statusEmoji[status] || '📦'} Order Update: ${data.orderNumber}`;
+      const status = sanitizedData.orderStatus;
+      subject = `${statusEmoji[status] || '📦'} Order Update: ${sanitizedData.orderNumber}`;
       
       htmlContent = `
         <!DOCTYPE html>
@@ -135,14 +284,14 @@ serve(async (req) => {
             </div>
             <div style="text-align: center;">
               <span class="status-badge">${statusEmoji[status] || '📦'} ${status}</span>
-              <p class="order-number">Order #${data.orderNumber}</p>
+              <p class="order-number">Order #${sanitizedData.orderNumber}</p>
             </div>
             <div class="content">
               <p class="message">${statusMessages[status] || 'Your order status has been updated.'}</p>
-              ${data.items && data.items.length > 0 ? `
+              ${sanitizedData.items.length > 0 ? `
                 <div class="items">
                   <p style="color: #888; margin-bottom: 8px;">Items in your order:</p>
-                  ${data.items.map(item => `<div class="item">💎 ${item}</div>`).join('')}
+                  ${sanitizedData.items.map(item => `<div class="item">💎 ${item}</div>`).join('')}
                 </div>
               ` : ''}
             </div>
@@ -157,16 +306,14 @@ serve(async (req) => {
         </body>
         </html>
       `;
-    } else {
-      throw new Error('Invalid notification type');
     }
 
-    console.log(`Sending ${type} notification to ${email}`);
+    console.log(`Sending ${type} notification to ${trimmedEmail} for user ${userId}`);
 
     // Note: In production, replace 'onboarding@resend.dev' with your verified domain
     const { data: emailData, error } = await resend.emails.send({
       from: 'Astro Vichar <onboarding@resend.dev>',
-      to: [email],
+      to: [trimmedEmail],
       subject,
       html: htmlContent,
     });
