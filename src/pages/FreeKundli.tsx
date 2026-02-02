@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, FileText, Download, Share2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
 
 const FreeKundli = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +17,7 @@ const FreeKundli = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [kundliResult, setKundliResult] = useState<any>(null);
   const { toast } = useToast();
+  const printRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,147 +100,154 @@ const FreeKundli = () => {
     }, 3000);
   };
 
+  // Sanitize name for filename - allow only alphanumeric, underscore, dash
+  const sanitizeName = (name: string): string => {
+    return name
+      .replace(/[^a-zA-Z0-9_\s-]/g, '')
+      .replace(/\s+/g, '_')
+      .slice(0, 50);
+  };
+
   const downloadPDF = () => {
     if (!kundliResult) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    let yPos = 20;
-
-    // Helper function to add centered text
-    const addCenteredText = (text: string, y: number, fontSize: number = 12) => {
-      doc.setFontSize(fontSize);
-      doc.text(text, pageWidth / 2, y, { align: 'center' });
-    };
-
-    // Helper function to add a section header
-    const addSectionHeader = (text: string) => {
-      yPos += 10;
-      doc.setFillColor(218, 165, 32); // Gold color
-      doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(text, margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      yPos += 10;
-    };
-
-    // Title
-    doc.setFillColor(30, 30, 50);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    doc.setTextColor(218, 165, 32);
-    addCenteredText('ASTRO VICHAR', 15, 20);
-    doc.setTextColor(255, 255, 255);
-    addCenteredText('Vedic Birth Chart (Kundli)', 28, 14);
-    
-    yPos = 50;
-    doc.setTextColor(0, 0, 0);
-
-    // Birth Details Section
-    addSectionHeader('Birth Details');
-    doc.setFontSize(10);
-    doc.text(`Name: ${kundliResult.name}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Date of Birth: ${new Date(kundliResult.birthDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Time of Birth: ${kundliResult.birthTime}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Place of Birth: ${kundliResult.birthPlace}`, margin, yPos);
-    yPos += 6;
-
-    // Basic Chart Info
-    addSectionHeader('Basic Chart Information');
-    doc.setFontSize(10);
-    doc.text(`Sun Sign (Rashi): ${kundliResult.sunSign}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Moon Sign (Chandra Rashi): ${kundliResult.moonSign}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Ascendant (Lagna): ${kundliResult.ascendant}`, margin, yPos);
-    yPos += 6;
-
-    // Planetary Positions
-    addSectionHeader('Planetary Positions (Graha Sthiti)');
-    doc.setFontSize(9);
-    kundliResult.planets.forEach((planet: any) => {
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${planet.name}:`, margin, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${planet.sign} (House ${planet.house})`, margin + 50, yPos);
-      yPos += 5;
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Effect: ${planet.effects}`, margin + 5, yPos);
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(9);
-      yPos += 7;
-    });
-
-    // Predictions
-    doc.addPage();
-    yPos = 20;
-    addSectionHeader('Life Predictions');
-    doc.setFontSize(9);
-    Object.entries(kundliResult.predictions).forEach(([key, value]) => {
-      if (yPos > 260) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${key.charAt(0).toUpperCase() + key.slice(1)}:`, margin, yPos);
-      doc.setFont('helvetica', 'normal');
-      yPos += 5;
-      const lines = doc.splitTextToSize(value as string, pageWidth - 2 * margin);
-      doc.text(lines, margin, yPos);
-      yPos += lines.length * 5 + 5;
-    });
-
-    // Remedies
-    addSectionHeader('Recommended Remedies');
-    doc.setFontSize(9);
-    kundliResult.remedies.forEach((remedy: string, index: number) => {
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.text(`${index + 1}. ${remedy}`, margin, yPos);
-      yPos += 6;
-    });
-
-    // Lucky Details
-    addSectionHeader('Lucky Details');
-    doc.setFontSize(9);
-    doc.text(`Lucky Numbers: ${kundliResult.luckyDetails.numbers.join(', ')}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Lucky Colors: ${kundliResult.luckyDetails.colors.join(', ')}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Lucky Days: ${kundliResult.luckyDetails.days.join(', ')}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Lucky Direction: ${kundliResult.luckyDetails.direction}`, margin, yPos);
-    yPos += 6;
-    doc.text(`Recommended Gemstone: ${kundliResult.luckyDetails.gemstone}`, margin, yPos);
-
-    // Footer on each page
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Generated by Astro Vichar | astrovichar8@gmail.com | Page ${i} of ${pageCount}`, pageWidth / 2, 290, { align: 'center' });
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: 'Download Failed',
+        description: 'Please allow popups to download PDF.',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    // Save the PDF
-    doc.save(`Kundli_${kundliResult.name.replace(/\s+/g, '_')}.pdf`);
+    const sanitizedName = sanitizeName(kundliResult.name);
+    const formattedDate = new Date(kundliResult.birthDate).toLocaleDateString('en-IN', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+
+    // Generate HTML content for the PDF
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kundli_${sanitizedName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Georgia', serif; color: #1a1a2e; padding: 20px; }
+    .header { background: #1a1a2e; color: #daa520; text-align: center; padding: 20px; margin-bottom: 20px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header h2 { font-size: 14px; color: #fff; font-weight: normal; }
+    .section { margin-bottom: 15px; }
+    .section-header { background: #daa520; color: #1a1a2e; padding: 8px 12px; font-weight: bold; font-size: 14px; margin-bottom: 10px; }
+    .content { padding: 0 12px; font-size: 11px; line-height: 1.6; }
+    .content p { margin-bottom: 5px; }
+    .planet { margin-bottom: 8px; }
+    .planet-name { font-weight: bold; }
+    .planet-effect { color: #666; font-size: 10px; margin-left: 10px; }
+    .prediction { margin-bottom: 10px; }
+    .prediction-title { font-weight: bold; text-transform: capitalize; }
+    .remedy { margin-bottom: 5px; }
+    .footer { text-align: center; font-size: 9px; color: #999; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; }
+    @media print {
+      body { padding: 0; }
+      .header { margin-bottom: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ASTRO VICHAR</h1>
+    <h2>Vedic Birth Chart (Kundli)</h2>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Birth Details</div>
+    <div class="content">
+      <p><strong>Name:</strong> ${kundliResult.name}</p>
+      <p><strong>Date of Birth:</strong> ${formattedDate}</p>
+      <p><strong>Time of Birth:</strong> ${kundliResult.birthTime}</p>
+      <p><strong>Place of Birth:</strong> ${kundliResult.birthPlace}</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Basic Chart Information</div>
+    <div class="content">
+      <p><strong>Sun Sign (Rashi):</strong> ${kundliResult.sunSign}</p>
+      <p><strong>Moon Sign (Chandra Rashi):</strong> ${kundliResult.moonSign}</p>
+      <p><strong>Ascendant (Lagna):</strong> ${kundliResult.ascendant}</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Planetary Positions (Graha Sthiti)</div>
+    <div class="content">
+      ${kundliResult.planets.map((planet: any) => `
+        <div class="planet">
+          <span class="planet-name">${planet.name}:</span> ${planet.sign} (House ${planet.house})
+          <div class="planet-effect">Effect: ${planet.effects}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Life Predictions</div>
+    <div class="content">
+      ${Object.entries(kundliResult.predictions).map(([key, value]) => `
+        <div class="prediction">
+          <span class="prediction-title">${key}:</span> ${value}
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Recommended Remedies</div>
+    <div class="content">
+      ${kundliResult.remedies.map((remedy: string, index: number) => `
+        <div class="remedy">${index + 1}. ${remedy}</div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">Lucky Details</div>
+    <div class="content">
+      <p><strong>Lucky Numbers:</strong> ${kundliResult.luckyDetails.numbers.join(', ')}</p>
+      <p><strong>Lucky Colors:</strong> ${kundliResult.luckyDetails.colors.join(', ')}</p>
+      <p><strong>Lucky Days:</strong> ${kundliResult.luckyDetails.days.join(', ')}</p>
+      <p><strong>Lucky Direction:</strong> ${kundliResult.luckyDetails.direction}</p>
+      <p><strong>Recommended Gemstone:</strong> ${kundliResult.luckyDetails.gemstone}</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Generated by Astro Vichar | astrovichar8@gmail.com
+  </div>
+
+  <script>
+    window.onload = function() {
+      window.print();
+      window.onafterprint = function() {
+        window.close();
+      };
+    };
+  </script>
+</body>
+</html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
     
     toast({
-      title: 'PDF Downloaded!',
-      description: 'Your Kundli has been saved as PDF.',
+      title: 'PDF Ready!',
+      description: 'Use "Save as PDF" in the print dialog to download.',
     });
   };
 
@@ -323,6 +330,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                       placeholder="Enter your name"
+                      maxLength={100}
                     />
                   </div>
                   <div className="space-y-2">
@@ -353,6 +361,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
                       onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
                       className="bg-white border-cosmic-gold/30 text-black placeholder:text-gray-500"
                       placeholder="City, Country"
+                      maxLength={200}
                     />
                   </div>
                   <Button
@@ -387,7 +396,7 @@ ${kundliResult.remedies.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n
               <CardContent>
                 {kundliResult ? (
                   <div className="space-y-4">
-                    <div className="prose prose-invert prose-sm max-h-[400px] overflow-y-auto">
+                    <div ref={printRef} className="prose prose-invert prose-sm max-h-[400px] overflow-y-auto">
                       <div className="text-cosmic-silver whitespace-pre-wrap text-sm">
                         {formatResult()}
                       </div>
