@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseTextToSpeechOptions {
   onStart?: () => void;
@@ -32,18 +33,29 @@ export const useTextToSpeech = (options: UseTextToSpeechOptions = {}) => {
     const language = detectLanguage(text);
 
     try {
+      // Get the current session for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Authentication required for text-to-speech');
+      }
+
       const response = await fetch(
         `https://enlxxeyzthcphnettkeu.supabase.co/functions/v1/elevenlabs-tts`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ text, language }),
         }
       );
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to use text-to-speech');
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'TTS request failed');
       }
