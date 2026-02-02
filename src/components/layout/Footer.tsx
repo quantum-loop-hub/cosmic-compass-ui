@@ -37,7 +37,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <Star className="w-8 h-8 text-cosmic-gold animate-twinkle" />
+              <img
+                src="https://res.cloudinary.com/dc95e31uf/image/upload/v1769684680/cosmic-logo_wtdgjd.jpg"
+                alt="Astro Vichar Logo"
+                className="w-8 h-8 object-contain"
+              />
               <span className="text-xl font-bold text-gradient-gold">ASTRO VICHAR</span>
             </Link>
             <p className="text-cosmic-silver text-sm">
@@ -66,22 +70,22 @@ const Footer = () => {
           <div>
             <h3 className="text-cosmic-gold font-semibold mb-4">{t('footer.contact')}</h3>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-cosmic-silver text-sm">
+              {/*<li className="flex items-center gap-2 text-cosmic-silver text-sm">
                 <Phone className="w-4 h-4 text-cosmic-gold" />
                 +91 98765 43210
-              </li>
+              </li> */}
               <li className="flex items-center gap-2 text-cosmic-silver text-sm">
                 <Mail className="w-4 h-4 text-cosmic-gold" />
-                contact@astrovichar.com
+                astrovichar8@gmail.com
               </li>
               <li className="flex items-start gap-2 text-cosmic-silver text-sm">
                 <MapPin className="w-4 h-4 text-cosmic-gold mt-0.5" />
-                Mumbai, Maharashtra, India
+                Ram mandir, khariya street, New delhi-110007
               </li>
             </ul>
           </div>
 
-          {/* WhatsApp CTA */}
+          {/* WhatsApp CTA 
           <div>
             <h3 className="text-cosmic-gold font-semibold mb-4">{t('footer.whatsapp')}</h3>
             <a
@@ -94,7 +98,7 @@ const Footer = () => {
                 WhatsApp
               </Button>
             </a>
-          </div>
+          </div>*/}
         </div>
 
         {/* Copyright */}

@@ -30,7 +30,11 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="relative">
-              <Star className="w-8 h-8 text-cosmic-gold animate-twinkle" />
+              <img
+                src="https://res.cloudinary.com/dc95e31uf/image/upload/v1769684680/cosmic-logo_wtdgjd.jpg"
+                alt="Astro Vichar Logo"
+                className="w-8 h-8 object-contain"
+              />
               <div className="absolute inset-0 bg-cosmic-gold/30 blur-lg rounded-full" />
             </div>
             <span className="text-xl font-bold text-gradient-gold">ASTRO VICHAR</span>
