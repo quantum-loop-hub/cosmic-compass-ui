@@ -7,7 +7,7 @@ import { useState } from 'react';
 import astrologerImage from '@/assets/astrovichar.png';
 
 const astrologer = {
-  name: 'Astro Vichar',
+  name: 'Pandit Akhilesh Gautam',
   email: 'astrovichar8@gmail.com',
   specialties: ['Vedic Astrology', 'Kundli Analysis', 'Career Guidance', 'Marriage Compatibility', 'Gemstone Consultation'],
   experience: 15,
