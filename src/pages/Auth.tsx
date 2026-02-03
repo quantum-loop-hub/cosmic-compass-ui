@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Star, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2, Star, Eye, EyeOff, Mail } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -55,12 +56,28 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     const { error } = await signIn(data.email, data.password);
     setIsLoading(false);
 
     if (error) {
+      const errorMessage = error.message?.toLowerCase() || '';
+      
+      // Handle email not confirmed error
+      if (errorMessage.includes('email not confirmed')) {
+        setPendingVerificationEmail(data.email);
+        toast({
+          title: 'Email Not Verified',
+          description: 'Please verify your email before logging in. Check your inbox or click "Resend" below.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       toast({
         title: 'Login Failed',
         description: error.message || 'Invalid email or password',
@@ -69,6 +86,33 @@ const Auth = () => {
     } else {
       toast({ title: 'Welcome back!', description: 'You have successfully logged in.' });
       navigate('/');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!pendingVerificationEmail) return;
+    
+    setIsResending(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: pendingVerificationEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    setIsResending(false);
+
+    if (error) {
+      toast({
+        title: 'Failed to Resend',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Verification Email Sent!',
+        description: `We've sent a new verification link to ${pendingVerificationEmail}. Please check your inbox and spam folder.`,
+      });
     }
   };
 
@@ -88,10 +132,13 @@ const Auth = () => {
         variant: 'destructive',
       });
     } else {
+      setPendingVerificationEmail(data.email);
       toast({
         title: 'Account Created!',
-        description: 'Please check your email to verify your account.',
+        description: 'Please check your email (including spam folder) to verify your account before logging in.',
       });
+      // Switch to login view so they can see the resend option
+      setIsLogin(true);
     }
   };
 
@@ -150,6 +197,28 @@ const Auth = () => {
                     <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
                   )}
                 </div>
+                {/* Resend verification email button */}
+                {pendingVerificationEmail && (
+                  <div className="p-3 bg-cosmic-gold/10 border border-cosmic-gold/30 rounded-lg">
+                    <p className="text-sm text-cosmic-silver mb-2">
+                      Didn't receive the verification email?
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-cosmic-gold/50 text-cosmic-gold hover:bg-cosmic-gold/20"
+                      onClick={handleResendVerification}
+                      disabled={isResending}
+                    >
+                      {isResending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Mail className="w-4 h-4 mr-2" />
+                      )}
+                      Resend Verification Email
+                    </Button>
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-gold hover:opacity-90 text-cosmic-dark font-semibold"
