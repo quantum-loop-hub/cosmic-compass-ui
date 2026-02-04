@@ -12,10 +12,14 @@ import { ShoppingCart, Search, Gem, Star, Filter, Plus, Minus, Trash2, X, Heart,
 import { useGemstoneStore } from '@/hooks/useGemstoneStore';
 import { categories, priceRanges, sortOptions, mockProducts } from '@/data/gemstoneProducts';
 import { toast } from 'sonner';
+import CheckoutDialog from '@/components/checkout/CheckoutDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const COMPARE_KEY = 'gemstone_compare';
 
 const GemstoneStore = () => {
+  const { user } = useAuth();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
   const {
     searchQuery,
@@ -245,10 +249,17 @@ const GemstoneStore = () => {
                                 </Button>
                                 <Button
                                   className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
-                                  onClick={handleCheckout}
-                                  disabled={isCheckingOut}
+                                  onClick={() => {
+                                    if (!user) {
+                                      toast.error('Please login to checkout');
+                                      navigate('/auth');
+                                      return;
+                                    }
+                                    setIsCartOpen(false);
+                                    setIsCheckoutOpen(true);
+                                  }}
                                 >
-                                  {isCheckingOut ? 'Processing...' : 'Proceed to Pay'}
+                                  Proceed to Checkout
                                 </Button>
                               </div>
                               <p className="text-xs text-muted-foreground text-center">
@@ -557,6 +568,20 @@ const GemstoneStore = () => {
           </Button>
         </div>
       )}
+
+      {/* Checkout Dialog */}
+      <CheckoutDialog
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        cart={cart}
+        cartTotal={cartTotal}
+        formatPrice={formatPrice}
+        onOrderComplete={(orderNumber) => {
+          toast.success(`Order ${orderNumber} placed! Check your order history.`);
+          navigate('/purchase-history');
+        }}
+        clearCart={clearCart}
+      />
     </Layout>
   );
 };
