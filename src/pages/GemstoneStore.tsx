@@ -250,11 +250,6 @@ const GemstoneStore = () => {
                                 <Button
                                   className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold"
                                   onClick={() => {
-                                    if (!user) {
-                                      toast.error('Please login to checkout');
-                                      navigate('/auth');
-                                      return;
-                                    }
                                     setIsCartOpen(false);
                                     setIsCheckoutOpen(true);
                                   }}

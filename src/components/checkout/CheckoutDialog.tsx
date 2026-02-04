@@ -90,11 +90,6 @@ const CheckoutDialog = ({
   };
 
   const handlePlaceOrder = async () => {
-    if (!user) {
-      toast.error('Please login to place an order');
-      return;
-    }
-
     setStep('processing');
 
     try {
@@ -109,32 +104,66 @@ const CheckoutDialog = ({
         image: item.product.image,
       }));
 
-      const { error } = await supabase.from('orders').insert({
-        user_id: user.id,
-        order_number: generatedOrderNumber,
-        items: orderItems,
-        subtotal: cartTotal,
-        shipping_cost: shippingCost,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        payment_method: 'cod',
-        payment_status: 'pending',
-        order_status: 'confirmed',
-        shipping_address: {
-          fullName: addressData.fullName,
-          phone: addressData.phone,
-          email: addressData.email,
-          addressLine1: addressData.addressLine1,
-          addressLine2: addressData.addressLine2 || '',
-          landmark: addressData.landmark || '',
-          city: addressData.city,
-          state: addressData.state,
-          pincode: addressData.pincode,
-          addressType: addressData.addressType,
-        },
-      });
+      // Only save to database if user is logged in
+      if (user) {
+        const { error } = await supabase.from('orders').insert({
+          user_id: user.id,
+          order_number: generatedOrderNumber,
+          items: orderItems,
+          subtotal: cartTotal,
+          shipping_cost: shippingCost,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          payment_method: 'cod',
+          payment_status: 'pending',
+          order_status: 'confirmed',
+          shipping_address: {
+            fullName: addressData.fullName,
+            phone: addressData.phone,
+            email: addressData.email,
+            addressLine1: addressData.addressLine1,
+            addressLine2: addressData.addressLine2 || '',
+            landmark: addressData.landmark || '',
+            city: addressData.city,
+            state: addressData.state,
+            pincode: addressData.pincode,
+            addressType: addressData.addressType,
+          },
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+      }
+
+      // Send order confirmation email
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            type: 'order_placed',
+            email: addressData.email,
+            data: {
+              userName: addressData.fullName,
+              orderNumber: generatedOrderNumber,
+              items: orderItems.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              totalAmount: totalAmount,
+              shippingAddress: {
+                fullName: addressData.fullName,
+                addressLine1: addressData.addressLine1,
+                city: addressData.city,
+                state: addressData.state,
+                pincode: addressData.pincode,
+              },
+            },
+          },
+        });
+        console.log('Order confirmation email sent');
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the order if email fails
+      }
 
       setOrderNumber(generatedOrderNumber);
       setStep('success');
