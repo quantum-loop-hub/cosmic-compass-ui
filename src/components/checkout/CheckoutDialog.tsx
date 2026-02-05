@@ -136,7 +136,7 @@ const CheckoutDialog = ({
 
       // Send order confirmation email
       try {
-        await supabase.functions.invoke('send-notification', {
+        const { data, error: emailError } = await supabase.functions.invoke('send-notification', {
           body: {
             type: 'order_placed',
             email: addressData.email,
@@ -159,14 +159,21 @@ const CheckoutDialog = ({
             },
           },
         });
-        console.log('Order confirmation email sent');
+        
+        if (emailError || data?.error) {
+          console.warn('Email notification failed (order still placed):', emailError || data?.error);
+          toast.info('Order placed! Email confirmation may take a moment.');
+        } else {
+          console.log('Order confirmation email sent');
+        }
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError);
-        // Don't fail the order if email fails
+        // Don't fail the order if email fails - just log it
       }
 
       setOrderNumber(generatedOrderNumber);
       setStep('success');
+      toast.success('Order placed successfully!');
       clearCart();
     } catch (error: any) {
       console.error('Order error:', error);
