@@ -437,7 +437,24 @@ serve(async (req) => {
 
     if (error) {
       console.error('Resend error:', error);
-      throw error;
+      // Return a soft failure for domain verification issues (common in testing)
+      const errorMessage = typeof error === 'object' && error !== null && 'message' in error 
+        ? String((error as { message?: string }).message) 
+        : String(error);
+      const isDomainError = errorMessage.includes('verify a domain') || errorMessage.includes('testing emails');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: isDomainError ? 'domain_not_verified' : error.message,
+          message: isDomainError 
+            ? 'Email not sent: Resend domain not verified. Order was still placed successfully.'
+            : 'Failed to send email'
+        }),
+        {
+          status: isDomainError ? 200 : 500, // Return 200 for domain issues so order doesn't fail
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     console.log('Email sent successfully:', emailData);
