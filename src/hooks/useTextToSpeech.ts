@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UseTextToSpeechOptions {
   onStart?: () => void;
@@ -12,101 +11,65 @@ export const useTextToSpeech = (options: UseTextToSpeechOptions = {}) => {
   const { onStart, onEnd, onError } = options;
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const detectLanguage = (text: string): 'hi' | 'en' => {
-    // Simple detection: check for Devanagari script
+  const detectLanguage = (text: string): string => {
     const hindiPattern = /[\u0900-\u097F]/;
-    return hindiPattern.test(text) ? 'hi' : 'en';
+    return hindiPattern.test(text) ? 'hi-IN' : 'en-US';
   };
 
   const speak = useCallback(async (text: string) => {
     if (!text || text.trim().length === 0) return;
 
-    // Stop any currently playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    if (!window.speechSynthesis) {
+      const msg = 'Speech synthesis not supported in this browser';
+      onError?.(msg);
+      toast.error(msg);
+      return;
     }
+
+    // Stop any current speech
+    window.speechSynthesis.cancel();
 
     setIsLoading(true);
-    const language = detectLanguage(text);
 
-    try {
-      // Get the current session for authentication
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Authentication required for text-to-speech');
-      }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = detectLanguage(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utteranceRef.current = utterance;
 
-      const response = await fetch(
-        `https://enlxxeyzthcphnettkeu.supabase.co/functions/v1/elevenlabs-tts`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ text, language }),
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Please sign in to use text-to-speech');
-        }
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'TTS request failed');
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onplay = () => {
-        setIsSpeaking(true);
-        onStart?.();
-      };
-
-      audio.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-        onEnd?.();
-      };
-
-      audio.onerror = () => {
-        setIsSpeaking(false);
-        setIsLoading(false);
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-        const errorMsg = 'Failed to play audio';
-        onError?.(errorMsg);
-        toast.error(errorMsg);
-      };
-
+    utterance.onstart = () => {
       setIsLoading(false);
-      await audio.play();
-    } catch (error) {
-      console.error('TTS error:', error);
-      setIsLoading(false);
+      setIsSpeaking(true);
+      onStart?.();
+    };
+
+    utterance.onend = () => {
       setIsSpeaking(false);
-      const errorMsg = error instanceof Error ? error.message : 'Text-to-speech failed';
+      utteranceRef.current = null;
+      onEnd?.();
+    };
+
+    utterance.onerror = (e) => {
+      if (e.error === 'canceled') return;
+      setIsSpeaking(false);
+      setIsLoading(false);
+      utteranceRef.current = null;
+      const errorMsg = 'Failed to speak text';
       onError?.(errorMsg);
       toast.error(errorMsg);
-    }
+    };
+
+    window.speechSynthesis.speak(utterance);
   }, [onStart, onEnd, onError]);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setIsSpeaking(false);
-      onEnd?.();
-    }
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+    setIsLoading(false);
+    utteranceRef.current = null;
+    onEnd?.();
   }, [onEnd]);
 
   return {
