@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Star, Award, Users, Languages, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import astrovicharImg from '@/assets/astrovichar.png';
 
 const About = () => {
   const astrologers = [
@@ -15,7 +16,7 @@ const About = () => {
       consultations: 12000,
       languages: ['Hindi', 'English'],
       bio: 'Expert Vedic astrologer with decades of experience in Kundli analysis, marriage matching, and life guidance.',
-      image: 'src/assets/astrovichar.png',
+      image: astrovicharImg,
       calLink: 'https://cal.id/astro-vichar',
     },
   ];
