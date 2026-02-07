@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CartItem } from '@/hooks/useGemstoneStore';
-import { Package, Truck, CreditCard, MapPin, CheckCircle2 } from 'lucide-react';
+import { Package, Truck, CreditCard, MapPin, CheckCircle2, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -63,6 +63,7 @@ const CheckoutDialog = ({
 }: CheckoutDialogProps) => {
   const [step, setStep] = useState<'address' | 'review' | 'processing' | 'success'>('address');
   const [orderNumber, setOrderNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'razorpay'>('razorpay');
   const { user } = useAuth();
 
   const shippingCost = cartTotal >= 10000 ? 0 : 199;
@@ -89,88 +90,159 @@ const CheckoutDialog = ({
     setStep('review');
   };
 
-  const handlePlaceOrder = async () => {
-    setStep('processing');
+  const saveOrder = async (
+    generatedOrderNumber: string,
+    paymentDetails?: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }
+  ) => {
+    const addressData = form.getValues();
+    const orderItems = cart.map(item => ({
+      productId: item.product.id,
+      name: item.product.name,
+      price: item.product.price,
+      quantity: item.quantity,
+      image: item.product.image,
+    }));
 
+    if (user) {
+      const { error } = await supabase.from('orders').insert({
+        user_id: user.id,
+        order_number: generatedOrderNumber,
+        items: orderItems,
+        subtotal: cartTotal,
+        shipping_cost: shippingCost,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        payment_method: paymentDetails ? 'razorpay' : 'cod',
+        payment_status: paymentDetails ? 'paid' : 'pending',
+        order_status: 'confirmed',
+        razorpay_order_id: paymentDetails?.razorpay_order_id || null,
+        razorpay_payment_id: paymentDetails?.razorpay_payment_id || null,
+        razorpay_signature: paymentDetails?.razorpay_signature || null,
+        shipping_address: {
+          fullName: addressData.fullName,
+          phone: addressData.phone,
+          email: addressData.email,
+          addressLine1: addressData.addressLine1,
+          addressLine2: addressData.addressLine2 || '',
+          landmark: addressData.landmark || '',
+          city: addressData.city,
+          state: addressData.state,
+          pincode: addressData.pincode,
+          addressType: addressData.addressType,
+        },
+      });
+
+      if (error) throw error;
+    }
+
+    // Send email notification
     try {
-      const generatedOrderNumber = `ORD${Date.now().toString(36).toUpperCase()}`;
-      const addressData = form.getValues();
-
-      const orderItems = cart.map(item => ({
-        productId: item.product.id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image,
-      }));
-
-      // Only save to database if user is logged in
-      if (user) {
-        const { error } = await supabase.from('orders').insert({
-          user_id: user.id,
-          order_number: generatedOrderNumber,
-          items: orderItems,
-          subtotal: cartTotal,
-          shipping_cost: shippingCost,
-          tax_amount: taxAmount,
-          total_amount: totalAmount,
-          payment_method: 'cod',
-          payment_status: 'pending',
-          order_status: 'confirmed',
-          shipping_address: {
-            fullName: addressData.fullName,
-            phone: addressData.phone,
-            email: addressData.email,
-            addressLine1: addressData.addressLine1,
-            addressLine2: addressData.addressLine2 || '',
-            landmark: addressData.landmark || '',
-            city: addressData.city,
-            state: addressData.state,
-            pincode: addressData.pincode,
-            addressType: addressData.addressType,
-          },
-        });
-
-        if (error) throw error;
-      }
-
-      // Send order confirmation email
-      try {
-        const { data, error: emailError } = await supabase.functions.invoke('send-notification', {
-          body: {
-            type: 'order_placed',
-            email: addressData.email,
-            data: {
-              userName: addressData.fullName,
-              orderNumber: generatedOrderNumber,
-              items: orderItems.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-              })),
-              totalAmount: totalAmount,
-              shippingAddress: {
-                fullName: addressData.fullName,
-                addressLine1: addressData.addressLine1,
-                city: addressData.city,
-                state: addressData.state,
-                pincode: addressData.pincode,
-              },
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'order_placed',
+          email: addressData.email,
+          data: {
+            userName: addressData.fullName,
+            orderNumber: generatedOrderNumber,
+            items: orderItems.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            totalAmount: totalAmount,
+            shippingAddress: {
+              fullName: addressData.fullName,
+              addressLine1: addressData.addressLine1,
+              city: addressData.city,
+              state: addressData.state,
+              pincode: addressData.pincode,
             },
           },
-        });
-        
-        if (emailError || data?.error) {
-          console.warn('Email notification failed (order still placed):', emailError || data?.error);
-          toast.info('Order placed! Email confirmation may take a moment.');
-        } else {
-          console.log('Order confirmation email sent');
-        }
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-        // Don't fail the order if email fails - just log it
-      }
+        },
+      });
+    } catch (emailError) {
+      console.warn('Email notification failed:', emailError);
+    }
+  };
 
+  const handleRazorpayPayment = async () => {
+    setStep('processing');
+    const generatedOrderNumber = `ORD${Date.now().toString(36).toUpperCase()}`;
+
+    try {
+      // Create Razorpay order via edge function
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: totalAmount,
+          currency: 'INR',
+          receipt: generatedOrderNumber,
+          notes: { order_number: generatedOrderNumber },
+        },
+      });
+
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Failed to create order');
+
+      const addressData = form.getValues();
+
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'AstroVichar Gemstones',
+        description: `Order ${generatedOrderNumber}`,
+        order_id: data.order_id,
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+          try {
+            await saveOrder(generatedOrderNumber, response);
+            setOrderNumber(generatedOrderNumber);
+            setStep('success');
+            toast.success('Payment successful! Order placed.');
+            clearCart();
+          } catch (err) {
+            console.error('Order save error:', err);
+            toast.error('Payment received but order save failed. Contact support.');
+            setStep('review');
+          }
+        },
+        prefill: {
+          name: addressData.fullName,
+          email: addressData.email,
+          contact: addressData.phone,
+        },
+        theme: { color: '#7c3aed' },
+        modal: {
+          ondismiss: () => {
+            toast.error('Payment cancelled');
+            setStep('review');
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        console.error('Payment failed:', response.error);
+        toast.error(`Payment failed: ${response.error.description}`);
+        setStep('review');
+      });
+      rzp.open();
+    } catch (error: any) {
+      console.error('Razorpay error:', error);
+      toast.error('Failed to initiate payment. Please try again.');
+      setStep('review');
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (paymentMethod === 'razorpay') {
+      return handleRazorpayPayment();
+    }
+
+    // COD flow
+    setStep('processing');
+    const generatedOrderNumber = `ORD${Date.now().toString(36).toUpperCase()}`;
+
+    try {
+      await saveOrder(generatedOrderNumber);
       setOrderNumber(generatedOrderNumber);
       setStep('success');
       toast.success('Order placed successfully!');
@@ -446,18 +518,53 @@ const CheckoutDialog = ({
 
             {/* Payment Method */}
             <div className="bg-muted/50 rounded-lg p-4">
-              <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                 <CreditCard className="w-4 h-4" /> Payment Method
               </h3>
-              <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
-                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                  <Package className="w-5 h-5 text-primary" />
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as 'cod' | 'razorpay')}
+                className="space-y-3"
+              >
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    paymentMethod === 'razorpay'
+                      ? 'bg-primary/10 border-primary/30'
+                      : 'border-border'
+                  }`}
+                  onClick={() => setPaymentMethod('razorpay')}
+                >
+                  <RadioGroupItem value="razorpay" id="razorpay" />
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <Label htmlFor="razorpay" className="font-medium text-foreground cursor-pointer">
+                      Pay Now (Razorpay)
+                    </Label>
+                    <p className="text-sm text-muted-foreground">UPI, Cards, Net Banking</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">Cash on Delivery</p>
-                  <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    paymentMethod === 'cod'
+                      ? 'bg-primary/10 border-primary/30'
+                      : 'border-border'
+                  }`}
+                  onClick={() => setPaymentMethod('cod')}
+                >
+                  <RadioGroupItem value="cod" id="cod-payment" />
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Package className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <Label htmlFor="cod-payment" className="font-medium text-foreground cursor-pointer">
+                      Cash on Delivery
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                  </div>
                 </div>
-              </div>
+              </RadioGroup>
             </div>
 
             <div className="flex gap-3">
@@ -465,7 +572,7 @@ const CheckoutDialog = ({
                 Edit Address
               </Button>
               <Button onClick={handlePlaceOrder} className="flex-1">
-                Place Order
+                {paymentMethod === 'razorpay' ? 'Pay Now' : 'Place Order (COD)'}
               </Button>
             </div>
           </div>
