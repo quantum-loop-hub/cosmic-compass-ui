@@ -3,6 +3,7 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Heart, Briefcase, Coins, Activity } from 'lucide-react';
+import HoroscopeNotificationSettings from '@/components/horoscope/HoroscopeNotificationSettings';
 
 const zodiacSigns = [
   { name: 'Aries', nameHi: 'मेष', symbol: '♈', dates: 'Mar 21 - Apr 19', element: 'Fire' },
@@ -275,6 +276,11 @@ const Horoscope = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Horoscope Notification Settings */}
+          <div className="mt-8">
+            <HoroscopeNotificationSettings />
+          </div>
 
           {/* Other Signs */}
           <div className="mt-12">

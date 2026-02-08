@@ -14,7 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useGemstoneStore } from '@/hooks/useGemstoneStore';
-
+import ReviewSection from '@/components/reviews/ReviewSection';
 const GemstoneDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -201,6 +201,11 @@ const GemstoneDetail = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Reviews */}
+          <div className="mt-12">
+            <ReviewSection type="gemstone" itemId={product.id} title={`Reviews for ${product.name}`} />
           </div>
 
           {/* Related Products */}
