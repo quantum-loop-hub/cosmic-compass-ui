@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wallet, Video, ShoppingBag, Clock } from 'lucide-react';
+import { Wallet, Video, ShoppingBag, Clock, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ConsultationPayment, GemstoneOrder } from '@/pages/MyWallet';
+import { generateConsultationReceipt } from '@/utils/generateReceipt';
 
 interface PaymentHistoryListProps {
   payments: ConsultationPayment[];
@@ -37,6 +38,9 @@ const PaymentHistoryList = ({ payments, orders, loading }: PaymentHistoryListPro
       status: p.status,
       type: 'consultation' as const,
       label: 'Consultation Payment',
+      paymentId: p.razorpay_payment_id || '',
+      orderId: p.razorpay_order_id || '',
+      currency: p.currency,
     })),
     ...orders.map(o => ({
       id: o.id,
@@ -110,7 +114,25 @@ const PaymentHistoryList = ({ payments, orders, loading }: PaymentHistoryListPro
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
+                    {tx.type === 'consultation' && tx.status === 'paid' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-primary hover:bg-primary/10"
+                        title="Download Receipt"
+                        onClick={() => generateConsultationReceipt({
+                          paymentId: tx.paymentId || '',
+                          orderId: tx.orderId || '',
+                          amount: tx.amount,
+                          currency: tx.currency || 'INR',
+                          status: tx.status,
+                          date: format(new Date(tx.date), 'dd MMM yyyy, hh:mm a'),
+                        })}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>
                     <span className="font-bold text-primary whitespace-nowrap">₹{tx.amount.toLocaleString()}</span>
                   </div>
