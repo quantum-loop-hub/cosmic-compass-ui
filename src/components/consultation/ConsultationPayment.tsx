@@ -167,6 +167,14 @@ const ConsultationPayment: React.FC = () => {
           <p className="text-sm text-muted-foreground">
             आपको ईमेल पर कन्फर्मेशन भेजा जाएगा। / You will receive a confirmation email shortly.
           </p>
+          <Button
+            onClick={() => navigate('/my-wallet')}
+            variant="outline"
+            className="border-primary/50 text-primary hover:bg-primary/10"
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            View My Wallet
+          </Button>
         </CardContent>
       </Card>
     );

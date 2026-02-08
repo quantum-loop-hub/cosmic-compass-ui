@@ -2,13 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  ArrowLeft, Wallet, IndianRupee, CreditCard, TrendingUp,
-  Calendar, CheckCircle, XCircle, Clock, Video
-} from 'lucide-react';
+import { ArrowLeft, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -24,56 +20,97 @@ export interface ConsultationPayment {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   created_at: string;
+  type: 'consultation';
 }
+
+export interface GemstoneOrder {
+  id: string;
+  order_number: string;
+  total_amount: number;
+  payment_status: string;
+  order_status: string;
+  created_at: string;
+  items: any;
+  type: 'gemstone';
+}
+
+export type WalletTransaction = ConsultationPayment | GemstoneOrder;
 
 const MyWallet = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [payments, setPayments] = useState<ConsultationPayment[]>([]);
+  const [orders, setOrders] = useState<GemstoneOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) fetchPayments();
+    if (user) fetchAll();
     else setLoading(false);
   }, [user]);
 
-  const fetchPayments = async () => {
+  const fetchAll = async () => {
     try {
-      const { data, error } = await supabase
-        .from('consultation_payments')
-        .select('id, amount, currency, status, razorpay_order_id, razorpay_payment_id, created_at')
-        .order('created_at', { ascending: false });
+      const [paymentsRes, ordersRes] = await Promise.all([
+        supabase
+          .from('consultation_payments')
+          .select('id, amount, currency, status, razorpay_order_id, razorpay_payment_id, created_at')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('orders')
+          .select('id, order_number, total_amount, payment_status, order_status, created_at, items')
+          .order('created_at', { ascending: false }),
+      ]);
 
-      if (error) throw error;
-      setPayments(data || []);
+      if (paymentsRes.error) throw paymentsRes.error;
+      if (ordersRes.error) throw ordersRes.error;
+
+      setPayments((paymentsRes.data || []).map(p => ({ ...p, type: 'consultation' as const })));
+      setOrders((ordersRes.data || []).map(o => ({ ...o, type: 'gemstone' as const })));
     } catch (err) {
-      console.error('Error fetching payments:', err);
+      console.error('Error fetching wallet data:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const stats = useMemo(() => {
-    const totalSpent = payments
+    const consultationSpent = payments
       .filter(p => p.status === 'paid')
       .reduce((sum, p) => sum + Number(p.amount), 0);
-    const totalPayments = payments.length;
-    const successfulPayments = payments.filter(p => p.status === 'paid').length;
-    const pendingPayments = payments.filter(p => p.status === 'pending').length;
-    const failedPayments = payments.filter(p => p.status === 'failed').length;
-    return { totalSpent, totalPayments, successfulPayments, pendingPayments, failedPayments };
-  }, [payments]);
+    const gemstoneSpent = orders
+      .filter(o => o.payment_status === 'paid')
+      .reduce((sum, o) => sum + Number(o.total_amount), 0);
+    const totalSpent = consultationSpent + gemstoneSpent;
+    const totalPayments = payments.length + orders.length;
+    const successfulPayments = payments.filter(p => p.status === 'paid').length + orders.filter(o => o.payment_status === 'paid').length;
+    const pendingPayments = payments.filter(p => p.status === 'pending').length + orders.filter(o => o.payment_status === 'pending').length;
+    const failedPayments = payments.filter(p => p.status === 'failed').length + orders.filter(o => o.payment_status === 'failed').length;
+    return { totalSpent, totalPayments, successfulPayments, pendingPayments, failedPayments, consultationSpent, gemstoneSpent };
+  }, [payments, orders]);
 
   const monthlyData = useMemo(() => {
-    const months: Record<string, number> = {};
+    const months: Record<string, { consultation: number; gemstone: number }> = {};
     payments
       .filter(p => p.status === 'paid')
       .forEach(p => {
         const key = format(new Date(p.created_at), 'MMM yyyy');
-        months[key] = (months[key] || 0) + Number(p.amount);
+        if (!months[key]) months[key] = { consultation: 0, gemstone: 0 };
+        months[key].consultation += Number(p.amount);
       });
-    return Object.entries(months).map(([month, amount]) => ({ month, amount }));
-  }, [payments]);
+    orders
+      .filter(o => o.payment_status === 'paid')
+      .forEach(o => {
+        const key = format(new Date(o.created_at), 'MMM yyyy');
+        if (!months[key]) months[key] = { consultation: 0, gemstone: 0 };
+        months[key].gemstone += Number(o.total_amount);
+      });
+    return Object.entries(months).map(([month, data]) => ({
+      month,
+      consultation: data.consultation,
+      gemstone: data.gemstone,
+      amount: data.consultation + data.gemstone,
+    }));
+  }, [payments, orders]);
 
   if (!user) {
     return (
@@ -133,11 +170,11 @@ const MyWallet = () => {
             </TabsList>
 
             <TabsContent value="history">
-              <PaymentHistoryList payments={payments} loading={loading} />
+              <PaymentHistoryList payments={payments} orders={orders} loading={loading} />
             </TabsContent>
 
             <TabsContent value="analytics">
-              <SpendingChart data={monthlyData} totalSpent={stats.totalSpent} />
+              <SpendingChart data={monthlyData} totalSpent={stats.totalSpent} consultationSpent={stats.consultationSpent} gemstoneSpent={stats.gemstoneSpent} />
             </TabsContent>
           </Tabs>
         </div>
