@@ -6,6 +6,7 @@ import { Star, Video, Clock, Languages, Calendar, Mail, Play, CheckCircle } from
 import { useState } from 'react';
 import astrologerImage from '@/assets/astrovichar.png';
 import ConsultationPayment from '@/components/consultation/ConsultationPayment';
+import ReviewSection from '@/components/reviews/ReviewSection';
 
 const astrologer = {
   name: 'Astro Vichar',
@@ -169,6 +170,11 @@ const Consultation = () => {
 
           {/* Payment Section - shown after scheduling */}
           {isScheduled && <ConsultationPayment />}
+
+          {/* Reviews Section */}
+          <div className="mt-12">
+            <ReviewSection type="consultation" title="Consultation Reviews" />
+          </div>
 
           {/* Contact Section */}
           <div className="mt-12 text-center">

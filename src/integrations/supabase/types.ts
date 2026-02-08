@@ -109,6 +109,33 @@ export type Database = {
         }
         Relationships: []
       }
+      horoscope_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          sun_sign: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          sun_sign: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          sun_sign?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -167,6 +194,42 @@ export type Database = {
           subtotal?: number
           tax_amount?: number
           total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          rating: number
+          review_text: string | null
+          reviewer_name: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          rating: number
+          review_text?: string | null
+          reviewer_name?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          rating?: number
+          review_text?: string | null
+          reviewer_name?: string | null
+          type?: string
           updated_at?: string
           user_id?: string
         }
