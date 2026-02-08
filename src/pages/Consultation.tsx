@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Video, Clock, Languages, Calendar, Mail, Play } from 'lucide-react';
 import { useState } from 'react';
 import astrologerImage from '@/assets/astrovichar.png';
+import ConsultationPayment from '@/components/consultation/ConsultationPayment';
 
 const astrologer = {
   name: 'Astro Vichar',
@@ -179,6 +180,9 @@ const Consultation = () => {
               ))}
             </div>
           </div>
+
+          {/* Payment Section */}
+          <ConsultationPayment />
 
           {/* Contact Section */}
           <div className="mt-12 text-center">
