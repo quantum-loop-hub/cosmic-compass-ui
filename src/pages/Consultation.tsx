@@ -2,7 +2,7 @@ import Layout from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Video, Clock, Languages, Calendar, Mail, Play } from 'lucide-react';
+import { Star, Video, Clock, Languages, Calendar, Mail, Play, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import astrologerImage from '@/assets/astrovichar.png';
 import ConsultationPayment from '@/components/consultation/ConsultationPayment';
@@ -21,9 +21,11 @@ const astrologer = {
 
 const Consultation = () => {
   const [showVideo, setShowVideo] = useState(false);
+  const [isScheduled, setIsScheduled] = useState(false);
 
   const handleBooking = () => {
     window.open(astrologer.calLink, '_blank');
+    setIsScheduled(true);
   };
 
   return (
@@ -151,38 +153,22 @@ const Consultation = () => {
                     className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 text-primary-foreground font-semibold glow-gold"
                   >
                     <Calendar className="w-5 h-5 mr-2" />
-                    Schedule Consultation
+                    {isScheduled ? 'Reschedule Consultation' : 'Schedule Consultation'}
                   </Button>
+
+                  {isScheduled && (
+                    <p className="text-sm text-green-400 mt-2 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      Consultation scheduled! Complete payment below.
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* How it works */}
-          <div className="mt-12 sm:mt-16">
-            <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">
-              <span className="text-gradient-gold">How It Works</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {[
-                { step: 1, title: 'Choose a Time', desc: 'Select a convenient slot from the calendar' },
-                { step: 2, title: 'Fill Details', desc: 'Provide your birth details for accurate reading' },
-                { step: 3, title: 'Confirm Booking', desc: 'Complete the booking process' },
-                { step: 4, title: 'Join Video Call', desc: 'Get Google Meet link and connect at scheduled time' },
-              ].map((item) => (
-                <div key={item.step} className="text-center p-4 cosmic-card-hover rounded-lg">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-lg sm:text-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    {item.step}
-                  </div>
-                  <h3 className="text-primary font-semibold mb-2 text-sm sm:text-base">{item.title}</h3>
-                  <p className="text-muted-foreground text-xs sm:text-sm">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment Section */}
-          <ConsultationPayment />
+          {/* Payment Section - shown after scheduling */}
+          {isScheduled && <ConsultationPayment />}
 
           {/* Contact Section */}
           <div className="mt-12 text-center">
