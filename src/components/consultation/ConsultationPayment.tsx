@@ -116,6 +116,27 @@ const ConsultationPayment: React.FC = () => {
             });
             setPaymentStatus('success');
             toast.success('भुगतान सफल! / Payment successful!');
+
+            // Send confirmation email (non-blocking)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token && user?.email) {
+              fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://enlxxeyzthcphnettkeu.supabase.co'}/functions/v1/send-notification`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  type: 'consultation_payment_success',
+                  email: user.email,
+                  data: {
+                    userName: user.user_metadata?.full_name || user.email,
+                    paymentId: res.razorpay_payment_id,
+                    paymentAmount: activeAmount,
+                  },
+                }),
+              }).catch(err => console.error('Email notification error:', err));
+            }
           } catch (err) {
             console.error('Save payment error:', err);
             setPaymentStatus('success');
