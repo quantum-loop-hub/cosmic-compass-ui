@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CreditCard, CheckCircle, XCircle, Loader2, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { generateConsultationReceipt } from '@/utils/generateReceipt';
+import { format } from 'date-fns';
 
 const PRESET_AMOUNTS = [500, 1100, 2100, 5100];
 
@@ -188,14 +190,31 @@ const ConsultationPayment: React.FC = () => {
           <p className="text-sm text-muted-foreground">
             आपको ईमेल पर कन्फर्मेशन भेजा जाएगा। / You will receive a confirmation email shortly.
           </p>
-          <Button
-            onClick={() => navigate('/my-wallet')}
-            variant="outline"
-            className="border-primary/50 text-primary hover:bg-primary/10"
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            View My Wallet
-          </Button>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Button
+              onClick={() => generateConsultationReceipt({
+                paymentId: paymentDetails.payment_id,
+                orderId: paymentDetails.order_id,
+                amount: paymentDetails.amount,
+                currency: 'INR',
+                status: 'paid',
+                date: format(new Date(), 'dd MMM yyyy, hh:mm a'),
+                userEmail: user?.email || undefined,
+              })}
+              className="bg-primary text-primary-foreground"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Receipt
+            </Button>
+            <Button
+              onClick={() => navigate('/my-wallet')}
+              variant="outline"
+              className="border-primary/50 text-primary hover:bg-primary/10"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              View My Wallet
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
