@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 // Valid notification types
-const VALID_NOTIFICATION_TYPES = ['consultation_booked', 'order_status_changed', 'order_placed'] as const;
+const VALID_NOTIFICATION_TYPES = ['consultation_booked', 'consultation_payment_success', 'order_status_changed', 'order_placed'] as const;
 type NotificationType = typeof VALID_NOTIFICATION_TYPES[number];
 
 // Valid order statuses
@@ -31,6 +31,8 @@ interface NotificationRequest {
     orderStatus?: string;
     items?: string[] | OrderItem[];
     totalAmount?: number;
+    paymentId?: string;
+    paymentAmount?: number;
     shippingAddress?: {
       fullName?: string;
       addressLine1?: string;
@@ -418,6 +420,51 @@ serve(async (req) => {
             <div class="footer">
               <p>🙏 Thank you for choosing Astro Vichar Gemstones</p>
               <p>Questions? Reply to this email or contact astrovichar8@gmail.com</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    } else if (type === 'consultation_payment_success') {
+      subject = '✅ Consultation Payment Received - Astro Vichar';
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: #0a0a0f; color: #e5e5e5; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 32px; border: 1px solid #d4af37; }
+            .header { text-align: center; margin-bottom: 24px; }
+            .header h1 { color: #d4af37; margin: 0; font-size: 28px; }
+            .success-icon { font-size: 48px; margin-bottom: 16px; }
+            .content { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 24px; margin: 20px 0; }
+            .detail { margin: 12px 0; padding: 12px; background: rgba(212, 175, 55, 0.1); border-radius: 8px; border-left: 4px solid #d4af37; }
+            .detail-label { color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
+            .detail-value { color: #fff; font-size: 18px; font-weight: 600; }
+            .footer { text-align: center; margin-top: 24px; color: #888; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="success-icon">✅</div>
+              <h1>Payment Received!</h1>
+            </div>
+            <p style="text-align: center;">नमस्ते ${sanitizedData.userName || 'User'}, your consultation payment has been successfully processed.</p>
+            <div class="content">
+              <div class="detail">
+                <div class="detail-label">Amount Paid</div>
+                <div class="detail-value">₹${(data.paymentAmount || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div class="detail">
+                <div class="detail-label">Payment ID</div>
+                <div class="detail-value" style="font-size: 14px;">${sanitizeString(data.paymentId, 100) || '—'}</div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #888;">Your consultation session details will be shared separately. Keep this email as your payment receipt.</p>
+            <div class="footer">
+              <p>🙏 Thank you for choosing Astro Vichar</p>
+              <p>Questions? Contact astrovichar8@gmail.com</p>
             </div>
           </div>
         </body>
