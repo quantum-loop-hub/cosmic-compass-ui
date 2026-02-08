@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Star, Globe, Wallet } from 'lucide-react';
+import { Menu, X, Star, Globe, Wallet, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,6 +73,12 @@ const Navbar = () => {
 
             {user ? (
               <>
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
+                    <UserCircle className="w-4 h-4 mr-1" />
+                    Profile
+                  </Button>
+                </Link>
                 <Link to="/my-wallet">
                   <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
                     <Wallet className="w-4 h-4 mr-1" />
@@ -146,6 +152,12 @@ const Navbar = () => {
                 
                 {user ? (
                   <>
+                    <Link to="/profile" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
+                        <UserCircle className="w-4 h-4 mr-1" />
+                        Profile
+                      </Button>
+                    </Link>
                     <Link to="/my-wallet" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
                         <Wallet className="w-4 h-4 mr-1" />
