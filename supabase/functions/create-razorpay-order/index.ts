@@ -13,6 +13,32 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Razorpay order request from user:", user.id);
+
     const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
@@ -29,9 +55,7 @@ serve(async (req) => {
       );
     }
 
-    // Razorpay expects amount in paise
     const amountInPaise = Math.round(amount * 100);
-
     const credentials = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
 
     const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
@@ -52,7 +76,7 @@ serve(async (req) => {
 
     if (!razorpayResponse.ok) {
       console.error("Razorpay order creation failed:", razorpayData);
-      throw new Error(`Razorpay API error [${razorpayResponse.status}]: ${JSON.stringify(razorpayData)}`);
+      throw new Error("Failed to create Razorpay order");
     }
 
     return new Response(
@@ -66,9 +90,8 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("Error creating Razorpay order:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An error occurred processing your request" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

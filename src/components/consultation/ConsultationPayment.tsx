@@ -56,27 +56,24 @@ const ConsultationPayment: React.FC = () => {
     setPaymentStatus('idle');
 
     try {
-      // 1. Create Razorpay order via edge function
-      const response = await fetch(
-        'https://enlxxeyzthcphnettkeu.supabase.co/functions/v1/create-razorpay-order',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: activeAmount,
-            currency: 'INR',
-            receipt: `consult_${Date.now()}`,
-            notes: { type: 'consultation', user_id: user.id },
-          }),
-        }
-      );
+      // 1. Create Razorpay order via edge function (authenticated)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Session expired. Please login again.');
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to create order');
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: activeAmount,
+          currency: 'INR',
+          receipt: `consult_${Date.now()}`,
+          notes: { type: 'consultation', user_id: user.id },
+        },
+      });
+
+      if (orderError || orderData?.error) {
+        throw new Error(orderData?.error || orderError?.message || 'Failed to create order');
       }
 
-      const { order_id, key_id } = await response.json();
+      const { order_id, key_id } = orderData;
 
       // 2. Save pending payment record
       const { error: insertError } = await supabase
@@ -100,16 +97,20 @@ const ConsultationPayment: React.FC = () => {
         description: 'Consultation Payment',
         order_id,
         handler: async (res: RazorpayResponse) => {
-          // Payment successful
+          // Verify payment server-side
           try {
-            await supabase
-              .from('consultation_payments' as any)
-              .update({
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                razorpay_order_id: res.razorpay_order_id,
                 razorpay_payment_id: res.razorpay_payment_id,
                 razorpay_signature: res.razorpay_signature,
-                status: 'paid',
-              } as any)
-              .eq('razorpay_order_id', order_id);
+                table: 'consultation_payments',
+              },
+            });
+
+            if (verifyError || !verifyData?.verified) {
+              throw new Error('Payment verification failed');
+            }
 
             setPaymentDetails({
               payment_id: res.razorpay_payment_id,
@@ -120,29 +121,21 @@ const ConsultationPayment: React.FC = () => {
             toast.success('भुगतान सफल! / Payment successful!');
 
             // Send confirmation email (non-blocking)
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.access_token && user?.email) {
-              fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://enlxxeyzthcphnettkeu.supabase.co'}/functions/v1/send-notification`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`,
+            supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'consultation_payment_success',
+                email: user.email,
+                data: {
+                  userName: user.user_metadata?.full_name || user.email,
+                  paymentId: res.razorpay_payment_id,
+                  paymentAmount: activeAmount,
                 },
-                body: JSON.stringify({
-                  type: 'consultation_payment_success',
-                  email: user.email,
-                  data: {
-                    userName: user.user_metadata?.full_name || user.email,
-                    paymentId: res.razorpay_payment_id,
-                    paymentAmount: activeAmount,
-                  },
-                }),
-              }).catch(err => console.error('Email notification error:', err));
-            }
+              },
+            }).catch(err => console.error('Email notification error:', err));
           } catch (err) {
-            console.error('Save payment error:', err);
-            setPaymentStatus('success');
-            toast.success('Payment received but save failed. Contact support.');
+            console.error('Payment verification error:', err);
+            setPaymentStatus('failed');
+            toast.error('Payment verification failed. Contact support.');
           }
           setIsProcessing(false);
         },

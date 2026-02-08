@@ -103,36 +103,63 @@ const CheckoutDialog = ({
       image: item.product.image,
     }));
 
-    if (user) {
-      const { error } = await supabase.from('orders').insert({
-        user_id: user.id,
-        order_number: generatedOrderNumber,
-        items: orderItems,
-        subtotal: cartTotal,
-        shipping_cost: shippingCost,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        payment_method: paymentDetails ? 'razorpay' : 'cod',
-        payment_status: paymentDetails ? 'paid' : 'pending',
-        order_status: 'confirmed',
-        razorpay_order_id: paymentDetails?.razorpay_order_id || null,
-        razorpay_payment_id: paymentDetails?.razorpay_payment_id || null,
-        razorpay_signature: paymentDetails?.razorpay_signature || null,
-        shipping_address: {
-          fullName: addressData.fullName,
-          phone: addressData.phone,
-          email: addressData.email,
-          addressLine1: addressData.addressLine1,
-          addressLine2: addressData.addressLine2 || '',
-          landmark: addressData.landmark || '',
-          city: addressData.city,
-          state: addressData.state,
-          pincode: addressData.pincode,
-          addressType: addressData.addressType,
-        },
-      });
+    const shippingAddress = {
+      fullName: addressData.fullName,
+      phone: addressData.phone,
+      email: addressData.email,
+      addressLine1: addressData.addressLine1,
+      addressLine2: addressData.addressLine2 || '',
+      landmark: addressData.landmark || '',
+      city: addressData.city,
+      state: addressData.state,
+      pincode: addressData.pincode,
+      addressType: addressData.addressType,
+    };
 
-      if (error) throw error;
+    if (user) {
+      if (paymentDetails) {
+        // For Razorpay payments, verify server-side and save order atomically
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+          body: {
+            razorpay_order_id: paymentDetails.razorpay_order_id,
+            razorpay_payment_id: paymentDetails.razorpay_payment_id,
+            razorpay_signature: paymentDetails.razorpay_signature,
+            table: 'orders',
+            order_data: {
+              order_number: generatedOrderNumber,
+              items: orderItems,
+              subtotal: cartTotal,
+              shipping_cost: shippingCost,
+              tax_amount: taxAmount,
+              total_amount: totalAmount,
+              payment_method: 'razorpay',
+              order_status: 'confirmed',
+              shipping_address: shippingAddress,
+            },
+          },
+        });
+
+        if (verifyError || !verifyData?.verified) {
+          throw new Error('Payment verification failed');
+        }
+      } else {
+        // COD flow - insert directly
+        const { error } = await supabase.from('orders').insert({
+          user_id: user.id,
+          order_number: generatedOrderNumber,
+          items: orderItems,
+          subtotal: cartTotal,
+          shipping_cost: shippingCost,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          payment_method: 'cod',
+          payment_status: 'pending',
+          order_status: 'confirmed',
+          shipping_address: shippingAddress,
+        });
+
+        if (error) throw error;
+      }
     }
 
     // Send email notification
