@@ -21,6 +21,7 @@ import AdminCustomers from "./pages/AdminCustomers";
 import GemstoneCompare from "./pages/GemstoneCompare";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import TrackOrder from "./pages/TrackOrder";
+import MyWallet from "./pages/MyWallet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/gemstone-compare" element={<GemstoneCompare />} />
               <Route path="/purchase-history" element={<PurchaseHistory />} />
               <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/my-wallet" element={<MyWallet />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

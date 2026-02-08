@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Star, Globe } from 'lucide-react';
+import { Menu, X, Star, Globe, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,6 +73,12 @@ const Navbar = () => {
 
             {user ? (
               <>
+                <Link to="/my-wallet">
+                  <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
+                    <Wallet className="w-4 h-4 mr-1" />
+                    My Wallet
+                  </Button>
+                </Link>
                 {isAdmin && (
                   <Link to="/admin">
                     <Button variant="outline" size="sm" className="border-cosmic-gold/50 text-cosmic-gold hover:bg-cosmic-gold/10">
@@ -139,14 +145,22 @@ const Navbar = () => {
                 </Button>
                 
                 {user ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { signOut(); setIsOpen(false); }}
-                    className="text-cosmic-silver hover:text-cosmic-gold"
-                  >
-                    {t('nav.logout')}
-                  </Button>
+                  <>
+                    <Link to="/my-wallet" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="text-cosmic-silver hover:text-cosmic-gold">
+                        <Wallet className="w-4 h-4 mr-1" />
+                        My Wallet
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { signOut(); setIsOpen(false); }}
+                      className="text-cosmic-silver hover:text-cosmic-gold"
+                    >
+                      {t('nav.logout')}
+                    </Button>
+                  </>
                 ) : (
                   <Link to="/auth" onClick={() => setIsOpen(false)}>
                     <Button className="bg-gradient-gold hover:opacity-90 text-cosmic-dark font-semibold">
