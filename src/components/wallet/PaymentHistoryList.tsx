@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Wallet, Video, ShoppingBag, Clock, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ConsultationPayment, GemstoneOrder } from '@/pages/MyWallet';
-import { generateConsultationReceipt } from '@/utils/generateReceipt';
+import { generateConsultationReceipt, generateGemstoneReceipt } from '@/utils/generateReceipt';
 
 interface PaymentHistoryListProps {
   payments: ConsultationPayment[];
@@ -49,6 +49,9 @@ const PaymentHistoryList = ({ payments, orders, loading }: PaymentHistoryListPro
       status: o.payment_status,
       type: 'gemstone' as const,
       label: `Gemstone Order #${o.order_number}`,
+      orderNumber: o.order_number,
+      orderStatus: o.order_status,
+      items: o.items,
     })),
   ]
     .filter(tx => filter === 'all' || tx.type === filter)
@@ -115,20 +118,41 @@ const PaymentHistoryList = ({ payments, orders, loading }: PaymentHistoryListPro
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {tx.type === 'consultation' && tx.status === 'paid' && (
+                    {tx.status === 'paid' && (
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-primary hover:bg-primary/10"
                         title="Download Receipt"
-                        onClick={() => generateConsultationReceipt({
-                          paymentId: tx.paymentId || '',
-                          orderId: tx.orderId || '',
-                          amount: tx.amount,
-                          currency: tx.currency || 'INR',
-                          status: tx.status,
-                          date: format(new Date(tx.date), 'dd MMM yyyy, hh:mm a'),
-                        })}
+                        onClick={() => {
+                          const dateStr = format(new Date(tx.date), 'dd MMM yyyy, hh:mm a');
+                          if (tx.type === 'consultation') {
+                            generateConsultationReceipt({
+                              paymentId: (tx as any).paymentId || '',
+                              orderId: (tx as any).orderId || '',
+                              amount: tx.amount,
+                              currency: (tx as any).currency || 'INR',
+                              status: tx.status,
+                              date: dateStr,
+                            });
+                          } else {
+                            const items = Array.isArray((tx as any).items)
+                              ? (tx as any).items.map((item: any) => ({
+                                  name: item.name || 'Item',
+                                  quantity: item.quantity || 1,
+                                  price: item.price || 0,
+                                }))
+                              : [];
+                            generateGemstoneReceipt({
+                              orderNumber: (tx as any).orderNumber || '',
+                              date: dateStr,
+                              status: (tx as any).orderStatus || tx.status,
+                              paymentStatus: tx.status,
+                              items,
+                              totalAmount: tx.amount,
+                            });
+                          }
+                        }}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
