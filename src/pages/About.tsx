@@ -8,10 +8,10 @@ import astrovicharImg from '@/assets/astrovichar.png';
 const About = () => {
   const astrologers = [
     {
-      name: 'Pandit Ramesh Sharma',
-      email: 'ramesh.sharma@astrovichar.com',
+      name: 'Pandit Akhilesh',
+      email: 'astrovichar8@gmail.com',
       specialties: ['Vedic Astrology', 'Kundli Analysis', 'Marriage Guidance'],
-      experience: 25,
+      experience: 15,
       rating: 4.9,
       consultations: 12000,
       languages: ['Hindi', 'English'],
